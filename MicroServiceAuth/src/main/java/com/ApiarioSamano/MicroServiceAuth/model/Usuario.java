@@ -1,4 +1,4 @@
-package com.ApiarioSamano.MicroServiceUsuario.model;
+package com.ApiarioSamano.MicroServiceAuth.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,5 +31,5 @@ public class Usuario {
     private String contrasena;
 
     @Column(nullable = false, length = 50)
-    private String rol; // OPERADOR, ADMINISTRADOR, CLIENTE
+    private String rol;
 }

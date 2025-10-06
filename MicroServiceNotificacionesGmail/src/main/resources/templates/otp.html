@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Código OTP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        .otp-code {
+            display: block;
+            margin: 20px auto;
+            font-size: 32px;
+            font-weight: bold;
+            color: #2F80ED;
+            letter-spacing: 5px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        .note {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+            margin-top: 20px;
+        }
+        /* Icono de warning animado */
+        .warning-icon {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>¡Hola, <span th:text="${nombreUsuario}">Usuario</span>!</h2>
+            <p>Código de verificación</p>
+        </div>
+
+        <span class="otp-code" th:text="${codigoVerificacion}">000000</span>
+
+        <p class="note">
+            <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#f1c40f">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+            <strong>Este código OTP expira en 5 minutos. Por favor, no lo compartas con nadie.</strong>
+        </p>
+
+        <div class="footer">
+            <p>Si no solicitaste este código, ignora este correo.</p>
+            <p>Enviado desde el microservicio de notificaciones</p>
+        </div>
+    </div>
+</body>
+</html>
