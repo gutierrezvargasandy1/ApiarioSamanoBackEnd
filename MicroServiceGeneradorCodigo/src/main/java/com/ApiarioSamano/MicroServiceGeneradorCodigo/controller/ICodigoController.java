@@ -1,23 +1,39 @@
 package com.ApiarioSamano.MicroServiceGeneradorCodigo.controller;
 
-import com.ApiarioSamano.MicroServiceGeneradorCodigo.dto.CodigoResponseDTO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.ApiarioSamano.MicroServiceGeneradorCodigo.dto.*;
+import org.springframework.web.bind.annotation.*;
 
 public interface ICodigoController {
 
-    @GetMapping("/otp")
-    CodigoResponseDTO generarOTP();
+        /**
+         * Genera un código OTP (One Time Password).
+         * No requiere parámetros JSON.
+         * GET /api/codigos/otp
+         */
+        @GetMapping("/otp")
+        CodigoResponseDTO generarOTP();
 
-    @GetMapping("/lote")
-    CodigoResponseDTO generarLote(
-            @RequestParam(defaultValue = "A") String apiario,
-            @RequestParam(defaultValue = "1") int numeroLote
-    );
+        /**
+         * Genera un código de lote para un apiario específico.
+         * Recibe un JSON con los siguientes campos:
+         * {
+         * "apiario": "A", // Nombre o identificador del apiario
+         * "numeroLote": 1 // Número del lote a generar
+         * }
+         * POST /api/codigos/lote
+         */
+        @PostMapping("/lote")
+        CodigoResponseDTO generarLote(@RequestBody LoteRequest request);
 
-    @GetMapping("/almacen")
-    CodigoResponseDTO generarAlmacen(
-            @RequestParam(defaultValue = "Z1") String zona,
-            @RequestParam(defaultValue = "PRD") String producto
-    );
+        /**
+         * Genera un código de almacén para un producto en una zona específica.
+         * Recibe un JSON con los siguientes campos:
+         * {
+         * "zona": "Z1", // Identificador de la zona de almacenamiento
+         * "producto": "PRD" // Código o nombre del producto
+         * }
+         * POST /api/codigos/almacen
+         */
+        @PostMapping("/almacen")
+        CodigoResponseDTO generarAlmacen(@RequestBody AlmacenRequest request);
 }

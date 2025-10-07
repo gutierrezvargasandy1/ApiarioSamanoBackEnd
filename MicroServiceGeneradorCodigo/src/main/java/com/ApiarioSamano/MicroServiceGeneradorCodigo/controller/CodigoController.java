@@ -1,7 +1,7 @@
 package com.ApiarioSamano.MicroServiceGeneradorCodigo.controller;
 
 import org.springframework.web.bind.annotation.*;
-import com.ApiarioSamano.MicroServiceGeneradorCodigo.dto.CodigoResponseDTO;
+import com.ApiarioSamano.MicroServiceGeneradorCodigo.dto.*;
 import com.ApiarioSamano.MicroServiceGeneradorCodigo.services.CodigoService;
 
 @RestController
@@ -17,30 +17,24 @@ public class CodigoController implements ICodigoController {
     @Override
     public CodigoResponseDTO generarOTP() {
         String codigo = codigoService.generarOTP();
-        return new CodigoResponseDTO(
-                codigo,
-                "OK",
-                "Código OTP generado correctamente."
-        );
+        return new CodigoResponseDTO(codigo, "OK", "Código OTP generado correctamente.");
     }
 
     @Override
-    public CodigoResponseDTO generarLote(String apiario, int numeroLote) {
-        String codigo = codigoService.generarCodigoLote(apiario, numeroLote);
+    public CodigoResponseDTO generarLote(LoteRequest request) {
+        String codigo = codigoService.generarCodigoLote(request.getProducto(), request.getNumeroLote());
         return new CodigoResponseDTO(
                 codigo,
                 "OK",
-                "Código de lote generado para el apiario " + apiario + "."
-        );
+                "Código de lote generado para el apiario " + request.getProducto() + ".");
     }
 
     @Override
-    public CodigoResponseDTO generarAlmacen(String zona, String producto) {
-        String codigo = codigoService.generarCodigoAlmacen(zona, producto);
+    public CodigoResponseDTO generarAlmacen(AlmacenRequest request) {
+        String codigo = codigoService.generarCodigoAlmacen(request.getZona(), request.getProducto());
         return new CodigoResponseDTO(
                 codigo,
                 "OK",
-                "Código de almacén generado para el producto " + producto + "."
-        );
+                "Código de almacén generado para el producto " + request.getProducto() + ".");
     }
 }
