@@ -29,7 +29,6 @@ public class UsuarioController implements IUsuarioController {
                 this.usuarioService = usuarioService;
         }
 
-        // ------------------- CREAR USUARIO -------------------
         @PostMapping
         @Operation(summary = "Crear un nuevo usuario")
         public ResponseEntity<ResponseDTO<Usuario>> crearUsuario(@RequestBody UsuarioRequestDTO request) {
@@ -53,7 +52,6 @@ public class UsuarioController implements IUsuarioController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 
-        // ------------------- OBTENER TODOS LOS USUARIOS -------------------
         @GetMapping
         @Operation(summary = "Obtener todos los usuarios")
         public ResponseEntity<ResponseDTO<List<Usuario>>> obtenerUsuarios() {
@@ -68,7 +66,6 @@ public class UsuarioController implements IUsuarioController {
                 return ResponseEntity.ok(response);
         }
 
-        // ------------------- OBTENER USUARIO POR ID -------------------
         @GetMapping("/{id}")
         @Operation(summary = "Obtener un usuario por su ID")
         public ResponseEntity<ResponseDTO<Usuario>> obtenerUsuarioPorId(@PathVariable Long id) {
@@ -83,7 +80,6 @@ public class UsuarioController implements IUsuarioController {
                 return ResponseEntity.ok(response);
         }
 
-        // ------------------- OBTENER USUARIO POR EMAIL -------------------
         @GetMapping("/email/{email}")
         @Operation(summary = "Obtener un usuario por su correo electrónico")
         public ResponseEntity<ResponseDTO<Usuario>> obtenerUsuarioPorEmail(@PathVariable String email) {
@@ -98,7 +94,6 @@ public class UsuarioController implements IUsuarioController {
                 return ResponseEntity.ok(response);
         }
 
-        // ------------------- ELIMINAR USUARIO -------------------
         @DeleteMapping("/{id}")
         @Operation(summary = "Eliminar un usuario por su ID")
         public ResponseEntity<ResponseDTO<Void>> eliminarUsuario(@PathVariable Long id) {
@@ -112,7 +107,6 @@ public class UsuarioController implements IUsuarioController {
                 return ResponseEntity.ok(response);
         }
 
-        // ------------------- ACTUALIZAR USUARIO POR EMAIL -------------------
         @PutMapping("/email/{email}")
         @Operation(summary = "Actualizar un usuario a partir de su correo electrónico")
         public ResponseEntity<ResponseDTO<Usuario>> actualizarUsuarioPorEmail(

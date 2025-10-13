@@ -32,4 +32,7 @@ public class Usuario {
 
     @Column(nullable = false, length = 50)
     private String rol;
+
+    @Column(nullable = true, length = 10)
+    private String otp;
 }

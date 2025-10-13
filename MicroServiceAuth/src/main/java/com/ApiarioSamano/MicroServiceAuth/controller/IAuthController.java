@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * Interfaz que define los endpoints REST para el microservicio de
  * autenticación.
@@ -18,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  * Rutas base: {@code http://localhost:8082/api/auth}
  */
 @RequestMapping("/api/auth")
-@Tag(name = "Autenticación", description = "Operaciones relacionadas con login y validación de tokens")
+@Tag(name = "Autenticación", description = "Operaciones relacionadas con login y recuperación de contraseña")
 public interface IAuthController {
 
     /**
@@ -39,4 +41,39 @@ public interface IAuthController {
     @Operation(summary = "Iniciar sesión con credenciales y obtener token JWT")
     ResponseEntity<ResponseDTO<AuthResponse>> login(@Valid @RequestBody LoginRequest request);
 
+    /**
+     * Inicia la recuperación de contraseña enviando un OTP al correo del usuario.
+     *
+     * Método: POST
+     * URL: {@code http://localhost:8082/api/auth/recuperar}
+     * Ejemplo Body:
+     * {
+     * "email": "usuario@correo.com"
+     * }
+     *
+     * @param request Mapa con el correo del usuario
+     * @return Mensaje indicando que el OTP fue enviado
+     */
+    @PostMapping("/recuperar")
+    @Operation(summary = "Enviar OTP al correo del usuario para recuperación de contraseña")
+    ResponseEntity<ResponseDTO<String>> iniciarRecuperacion(@RequestBody Map<String, String> request);
+
+    /**
+     * Verifica el OTP recibido y permite cambiar la contraseña.
+     *
+     * Método: POST
+     * URL: {@code http://localhost:8082/api/auth/recuperar/verificar}
+     * Ejemplo Body:
+     * {
+     * "email": "usuario@correo.com",
+     * "otp": "123456",
+     * "nuevaContrasena": "nuevaClave123"
+     * }
+     *
+     * @param request Mapa con email, OTP y nueva contraseña
+     * @return Mensaje indicando que la contraseña fue cambiada
+     */
+    @PostMapping("/recuperar/verificar")
+    @Operation(summary = "Verificar OTP y actualizar la contraseña del usuario")
+    ResponseEntity<ResponseDTO<String>> verificarOtpYCambiarContrasena(@RequestBody Map<String, String> request);
 }
