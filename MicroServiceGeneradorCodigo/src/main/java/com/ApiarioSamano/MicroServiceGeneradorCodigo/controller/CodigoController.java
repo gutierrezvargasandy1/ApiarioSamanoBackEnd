@@ -15,6 +15,12 @@ public class CodigoController implements ICodigoController {
     }
 
     @Override
+    public CodigoResponseDTO generarContrasena() {
+        String nuevaContrasena = codigoService.generarContrasena();
+        return new CodigoResponseDTO(nuevaContrasena, "OK", "Contraseña generada correctamente.");
+    }
+
+    @Override
     public CodigoResponseDTO generarOTP() {
         String codigo = codigoService.generarOTP();
         return new CodigoResponseDTO(codigo, "OK", "Código OTP generado correctamente.");

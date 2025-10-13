@@ -34,7 +34,9 @@ public interface IUsuarioController {
      */
     @PostMapping
     @Operation(summary = "Crear un nuevo usuario")
-    ResponseEntity<ResponseDTO<Usuario>> crearUsuario(@RequestBody UsuarioRequestDTO request);
+    ResponseEntity<ResponseDTO<Usuario>> crearUsuario(
+            @RequestBody UsuarioRequestDTO request,
+            @RequestHeader("Authorization") String jwt);
 
     /**
      * Obtener todos los usuarios.

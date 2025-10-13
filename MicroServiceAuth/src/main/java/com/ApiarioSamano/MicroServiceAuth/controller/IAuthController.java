@@ -76,4 +76,12 @@ public interface IAuthController {
     @PostMapping("/recuperar/verificar")
     @Operation(summary = "Verificar OTP y actualizar la contraseña del usuario")
     ResponseEntity<ResponseDTO<String>> verificarOtpYCambiarContrasena(@RequestBody Map<String, String> request);
+
+    @PostMapping("/recuperar/cambiar")
+    @Operation(summary = "Cambiar la contraseña del usuario")
+    ResponseEntity<ResponseDTO<String>> cambiarContrasena(@RequestBody Map<String, String> request);
+
+    @PostMapping("/recuperar/cambiar-temporal")
+    @Operation(summary = "Cambiar contraseña usando la contraseña temporal")
+    ResponseEntity<ResponseDTO<String>> cambiarContrasenaTemporal(@RequestBody Map<String, String> request);
 }

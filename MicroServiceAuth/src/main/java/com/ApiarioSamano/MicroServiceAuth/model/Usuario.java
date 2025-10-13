@@ -1,5 +1,7 @@
 package com.ApiarioSamano.MicroServiceAuth.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +10,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 @Builder
 public class Usuario {
 
@@ -33,6 +36,13 @@ public class Usuario {
     @Column(nullable = false, length = 50)
     private String rol;
 
-    @Column(nullable = true, length = 10)
+    @Column(nullable = true, length = 6)
     private String otp;
+
+    @Column(nullable = true)
+    private LocalDateTime otpExpiracion;
+
+    @Column(nullable = false)
+    private boolean estado;
+
 }

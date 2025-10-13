@@ -23,14 +23,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ⚙️ Habilita CORS (usa la configuración de CorsConfig)
+                .cors(cors -> {
+                })
+                // 🚫 Deshabilita CSRF (no se usa en APIs REST)
                 .csrf(csrf -> csrf.disable())
+                // 📦 API sin sesiones
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 🔒 Protege rutas según sea necesario
                 .authorizeHttpRequests(auth -> auth
-                        // 🔹 Rutas protegidas solo para ADMINISTRADOR
                         .requestMatchers("/usuarios/admin/**").authenticated()
-                        // 🔹 Otras rutas quedan abiertas
                         .anyRequest().permitAll())
-                // Registrar el filtro JWT antes del de autenticación de Spring
+                // 🔐 Filtro JWT antes del de autenticación estándar
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

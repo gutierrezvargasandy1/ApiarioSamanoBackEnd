@@ -36,4 +36,13 @@ public interface ICodigoController {
          */
         @PostMapping("/almacen")
         CodigoResponseDTO generarAlmacen(@RequestBody AlmacenRequest request);
+
+        /**
+         * Genera una contraseña segura aleatoria.
+         * GET /api/contrasena/generar
+         * 
+         * @return ResponseDTO<String> con la nueva contraseña generada
+         */
+        @GetMapping("/contrasena")
+        CodigoResponseDTO generarContrasena();
 }

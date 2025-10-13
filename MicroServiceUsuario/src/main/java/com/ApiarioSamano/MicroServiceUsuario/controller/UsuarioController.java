@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/usuarios")
 @Tag(name = "Usuarios", description = "Gestión de usuarios")
-public class UsuarioController implements IUsuarioController {
+public class UsuarioController {
 
         private final UsuarioService usuarioService;
 
@@ -31,17 +31,20 @@ public class UsuarioController implements IUsuarioController {
 
         @PostMapping
         @Operation(summary = "Crear un nuevo usuario")
-        public ResponseEntity<ResponseDTO<Usuario>> crearUsuario(@RequestBody UsuarioRequestDTO request) {
+        public ResponseEntity<ResponseDTO<Usuario>> crearUsuario(
+                        @RequestBody UsuarioRequestDTO request,
+                        @RequestHeader("Authorization") String jwt) { // Se asume que JWT viene en header
+                                                                      // "Authorization"
+
                 Usuario nuevoUsuario = Usuario.builder()
                                 .nombre(request.getNombre())
                                 .apellidoPa(request.getApellidoPa())
                                 .apellidoMa(request.getApellidoMa())
                                 .email(request.getEmail())
-                                .contrasena(request.getContrasena())
                                 .rol(request.getRol())
                                 .build();
 
-                Usuario guardado = usuarioService.guardarUsuario(nuevoUsuario);
+                Usuario guardado = usuarioService.guardarUsuario(nuevoUsuario, jwt);
 
                 ResponseDTO<Usuario> response = ResponseDTO.<Usuario>builder()
                                 .statusCode(HttpStatus.CREATED.value())

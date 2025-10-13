@@ -40,12 +40,35 @@ public class AuthController implements IAuthController {
             @RequestBody Map<String, String> request) {
         String email = request.get("email");
         String otp = request.get("otp");
+        authService.verificarOtpYCambiarContrasena(email, otp);
+
+        return ResponseEntity.ok(ResponseDTO.success(
+                "El OTP es válido",
+                "El código OTP es correcto. Ahora puede proceder a cambiar su contraseña."));
+    }
+
+    @Override
+    public ResponseEntity<ResponseDTO<String>> cambiarContrasena(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String nuevaContrasena = request.get("nuevaContrasena");
+        String otp = request.get("otp");
+        authService.cambiarContrasena(email, nuevaContrasena, otp);
+
+        return ResponseEntity.ok(ResponseDTO.success(
+                "Contraseña cambiada exitosamente",
+                "La contraseña ha sido actualizada correctamente."));
+    }
+
+    @Override
+    public ResponseEntity<ResponseDTO<String>> cambiarContrasenaTemporal(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String contrasenaTemporal = request.get("contrasenaTemporal");
         String nuevaContrasena = request.get("nuevaContrasena");
 
-        authService.verificarOtpYCambiarContrasena(email, otp, nuevaContrasena);
+        authService.cambiarContrasenaTemporal(email, contrasenaTemporal, nuevaContrasena);
 
         return ResponseEntity.ok(ResponseDTO.success(
                 "Contraseña actualizada correctamente",
-                "La contraseña ha sido cambiada exitosamente."));
+                "La contraseña ha sido cambiada con éxito usando la contraseña temporal."));
     }
 }

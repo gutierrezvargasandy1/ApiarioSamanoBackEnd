@@ -1,10 +1,10 @@
 package com.ApiarioSamano.MicroServiceGeneradorCodigo.services;
 
-
 import org.springframework.stereotype.Service;
 
 import com.ApiarioSamano.MicroServiceGeneradorCodigo.exceptions.CodigoException;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -13,10 +13,26 @@ import java.util.Random;
 public class CodigoService {
 
     private final Random random = new Random();
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*";
+    private SecureRandom secureRandom = new SecureRandom();
 
     public String generarOTP() {
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
+    }
+
+    public String generarContrasena() {
+        int longitud = 12;
+        int longitudMinima = 10;
+        if (longitud < longitudMinima) {
+            throw new CodigoException("La contraseña debe tener al menos " + longitudMinima + " caracteres.");
+        }
+        StringBuilder sb = new StringBuilder(longitud);
+        for (int i = 0; i < longitud; i++) {
+            int index = secureRandom.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+        return sb.toString();
     }
 
     public String generarCodigoLote(String apiario, int numeroLote) {
@@ -48,4 +64,3 @@ public class CodigoService {
         return zona.toUpperCase() + "-" + producto.toUpperCase() + "-" + fechaStr + "-" + aleatorio;
     }
 }
-

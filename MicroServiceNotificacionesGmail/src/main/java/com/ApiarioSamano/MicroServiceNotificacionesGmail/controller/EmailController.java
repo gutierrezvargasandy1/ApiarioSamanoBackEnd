@@ -16,9 +16,16 @@ public class EmailController implements IEmailController {
     }
 
     @Override
-    @PostMapping("/enviar")
-    public ResponseEntity<String> enviarCorreo(@RequestBody EmailRequestDTO request) {
-        emailService.enviarCorreo(request);
+    @PostMapping("/enviarOtp")
+    public ResponseEntity<String> enviarCorreoConOtp(@RequestBody EmailRequestDTO request) {
+        emailService.enviarCorreoConOtp(request);
+        return ResponseEntity.ok("Correo enviado correctamente a " + request.getDestinatario());
+    }
+
+    @Override
+    @PostMapping("/enviarContrasena")
+    public ResponseEntity<String> enviarCorreoConContrasena(@RequestBody EmailRequestDTO request) {
+        emailService.enviarCorreoConContrasenaTemporal(request);
         return ResponseEntity.ok("Correo enviado correctamente a " + request.getDestinatario());
     }
 }

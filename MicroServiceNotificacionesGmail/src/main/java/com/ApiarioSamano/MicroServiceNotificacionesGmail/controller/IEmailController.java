@@ -3,6 +3,7 @@ package com.ApiarioSamano.MicroServiceNotificacionesGmail.controller;
 import com.ApiarioSamano.MicroServiceNotificacionesGmail.dto.EmailRequestDTO;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,5 +30,8 @@ public interface IEmailController {
      * @return Mensaje de éxito o error
      */
     @PostMapping("/enviar")
-    ResponseEntity<String> enviarCorreo(@RequestBody EmailRequestDTO request) throws MessagingException;
+    ResponseEntity<String> enviarCorreoConOtp(@RequestBody EmailRequestDTO request) throws MessagingException;
+
+    @PostMapping("/enviarConAdjunto")
+    ResponseEntity<String> enviarCorreoConContrasena(@RequestBody EmailRequestDTO request) throws MessagingException;
 }

@@ -10,16 +10,15 @@ services:
       POSTGRES_USER: apiario
       POSTGRES_PASSWORD: apiario123
     ports:
-      - "5433:5432"  
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - apiario-network
 
-
   # ☕ MicroServiceAuth
   microserviceauth:
-    image: microserviceauth:1.0  
+    image: microserviceauth:1.0
     container_name: MicroServiceAuth
     depends_on:
       - postgres
@@ -30,50 +29,44 @@ services:
       SPRING_DATASOURCE_USERNAME: apiario
       SPRING_DATASOURCE_PASSWORD: apiario123
       MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos/otp
-      MICROSERVICIO_EMAIL_URL: http://microservicenotificaciones:8083/api/email/enviar
+      MICROSERVICIO_EMAIL_URL: http://microservicenotificaciones:8083/api/email/enviarOtp
     networks:
       - apiario-network
 
-
   # 👤 MicroServiceUsuarios
-  #microserviceusuarios:
-   #image: microserviceusuarios:1.0  
-    #container_name: MicroServiceUsuarios
-    #depends_on:
-    #  - postgres
-    #ports:
-    #  - "8086:8086"
-    #environment:
-     # SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/UsuariosDB
-     # SPRING_DATASOURCE_USERNAME: apiario
-     # SPRING_DATASOURCE_PASSWORD: apiario123
-   # networks:
-    #  - apiario-network
-
+  microserviceusuarios:
+    image: microserviceusuario:1.0
+    container_name: MicroServiceUsuarios
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/UsuariosDB
+      SPRING_DATASOURCE_USERNAME: apiario
+      SPRING_DATASOURCE_PASSWORD: apiario123
+      MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos/contrasena
+      MICROSERVICIO_EMAIL_URL: http://microservicenotificaciones:8083/api/email/enviarContrasena
+    networks:
+      - apiario-network
 
   # ✉️ MicroServiceNotificacionesGmail
   microservicenotificaciones:
-    image: microservicenotificaciones:1.0  
+    image: microservicenotificacionesgmail:1.0
     container_name: MicroServiceNotificaciones
-  
     ports:
       - "8083:8083"
-    
     networks:
       - apiario-network
-
 
   # 🔢 MicroServiceGeneradorCodigos
   microservicegeneradorcodigos:
     image: microservicegeneradorcodigo:1.0
     container_name: MicroServiceGeneradorCodigos
-    
     ports:
       - "8084:8084"
-    
     networks:
       - apiario-network
-
 
 volumes:
   pgdata:

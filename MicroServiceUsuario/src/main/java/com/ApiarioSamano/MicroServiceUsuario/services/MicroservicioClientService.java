@@ -1,4 +1,4 @@
-package com.ApiarioSamano.MicroServiceAuth.services;
+package com.ApiarioSamano.MicroServiceUsuario.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,8 +6,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.ApiarioSamano.MicroServiceAuth.dto.CodigoResponseDTO;
-import com.ApiarioSamano.MicroServiceAuth.dto.EmailRequestDTO;
+import com.ApiarioSamano.MicroServiceUsuario.dto.CodigoResponseDTO;
+import com.ApiarioSamano.MicroServiceUsuario.dto.EmailRequestDTO;
 
 import java.util.Map;
 
@@ -21,7 +21,6 @@ public class MicroservicioClientService {
     private static final Logger log = LoggerFactory.getLogger(MicroservicioClientService.class);
 
     private final RestTemplate restTemplate;
-    private final JwtService jwtService;
 
     @Value("${microservicio.codigos.url}")
     private String urlGeneradorCodigos;
@@ -29,9 +28,9 @@ public class MicroservicioClientService {
     @Value("${microservicio.email.url}")
     private String urlEnvioCorreo;
 
-    public String generarOtp() {
-        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true);
-        log.info("JWT generado para OTP: {}", jwt);
+    public String generarContrasena(String jwt) {
+
+        log.info("JWT generado para contraseña: {}", jwt);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(jwt);
@@ -53,13 +52,12 @@ public class MicroservicioClientService {
                 && "OK".equals(response.getBody().getEstatus())) {
             return response.getBody().getCodigo();
         } else {
-            log.error("Error al generar OTP: {}", response.getBody());
-            throw new RuntimeException("Error al generar OTP");
+            log.error("Error al generar contraseña: {}", response.getBody());
+            throw new RuntimeException("Error al generar contraseña");
         }
     }
 
-    public void enviarCorreo(String destinatario, String asunto, Map<String, Object> variables) {
-        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true);
+    public void enviarCorreo(String destinatario, String asunto, Map<String, Object> variables, String jwt) {
         log.info("JWT generado para envío de correo: {}", jwt);
 
         HttpHeaders headers = new HttpHeaders();

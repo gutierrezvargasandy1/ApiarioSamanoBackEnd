@@ -23,7 +23,7 @@ public class EmailService {
         this.templateEngine = templateEngine;
     }
 
-    public void enviarCorreo(EmailRequestDTO dto) {
+    public void enviarCorreoConOtp(EmailRequestDTO dto) {
         if (dto.getDestinatario() == null || dto.getDestinatario().isEmpty()) {
             throw new DestinatarioInvalidoException(dto.getDestinatario());
         }
@@ -36,6 +36,33 @@ public class EmailService {
             context.setVariables(dto.getVariables());
 
             String html = templateEngine.process("otp", context);
+
+            helper.setTo(dto.getDestinatario());
+            helper.setSubject(dto.getAsunto());
+            helper.setText(html, true);
+
+            mailSender.send(mensaje);
+
+        } catch (MessagingException e) {
+            throw new EmailException("Error al enviar el correo: " + e.getMessage());
+        } catch (Exception e) {
+            throw new TemplateProcessingException("Error al procesar el template del correo", e);
+        }
+    }
+
+    public void enviarCorreoConContrasenaTemporal(EmailRequestDTO dto) {
+        if (dto.getDestinatario() == null || dto.getDestinatario().isEmpty()) {
+            throw new DestinatarioInvalidoException(dto.getDestinatario());
+        }
+
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true);
+
+            Context context = new Context();
+            context.setVariables(dto.getVariables());
+
+            String html = templateEngine.process("contrasenaTemporal", context);
 
             helper.setTo(dto.getDestinatario());
             helper.setSubject(dto.getAsunto());

@@ -6,31 +6,65 @@ import com.ApiarioSamano.MicroServiceUsuario.model.Usuario;
 import com.ApiarioSamano.MicroServiceUsuario.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MicroservicioClientService microservicioClientService;
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            MicroservicioClientService microservicioClientService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.microservicioClientService = microservicioClientService;
+        log.info("MicroservicioClientService inyectado: {}", this.microservicioClientService != null);
+
     }
 
-    // Crear usuario validando duplicados y encriptando contraseña
-    public Usuario guardarUsuario(Usuario usuario) {
+    // Crear usuario con contraseña temporal y enviar correo
+    public Usuario guardarUsuario(Usuario usuario, String jwt) {
+        log.info("JWT recibido en guardarUsuario: {}", jwt);
+        if (jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7);
+        }
+
         if (usuario.getEmail() != null && usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new UsuarioAlreadyExistsException(usuario.getEmail());
         }
 
-        // Encriptar la contraseña antes de guardar
-        String contrasenaEncriptada = passwordEncoder.encode(usuario.getContrasena());
+        log.info("Solicitando contraseña temporal al microservicio de generación...");
+        String contrasenaTemporal = microservicioClientService.generarContrasena(jwt);
+        log.info("Contraseña temporal recibida: {}", contrasenaTemporal);
+        String contrasenaEncriptada = passwordEncoder.encode(contrasenaTemporal);
         usuario.setContrasena(contrasenaEncriptada);
+        usuario.setEstado(true);
 
-        return usuarioRepository.save(usuario);
+        // Guardar usuario
+        Usuario nuevoUsuario = usuarioRepository.save(usuario);
+        log.info("Usuario {} creado con contraseña temporal.", usuario.getEmail());
+
+        // Preparar variables para la plantilla Thymeleaf
+        Map<String, Object> variables = Map.of(
+                "nombreUsuario", usuario.getNombre(),
+                "contrasenaTemporal", contrasenaTemporal);
+
+        log.info("Enviando contraseña temporal al correo {}", usuario.getEmail());
+        microservicioClientService.enviarCorreo(
+                usuario.getEmail(),
+                "Tu contraseña temporal",
+                variables,
+                jwt);
+
+        return nuevoUsuario;
     }
 
     // Obtener todos los usuarios
@@ -60,6 +94,7 @@ public class UsuarioService {
             throw new UsuarioNotFoundException(id);
         }
         usuarioRepository.deleteById(id);
+        log.info("Usuario con ID {} eliminado.", id);
     }
 
     // Validar existencia por email
@@ -96,7 +131,8 @@ public class UsuarioService {
             usuarioExistente.setEmail(usuarioActualizado.getEmail());
         }
 
-        return usuarioRepository.save(usuarioExistente);
+        Usuario actualizado = usuarioRepository.save(usuarioExistente);
+        log.info("Usuario con email {} actualizado.", email);
+        return actualizado;
     }
-
 }

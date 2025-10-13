@@ -31,5 +31,9 @@ public class Usuario {
     private String contrasena;
 
     @Column(nullable = false, length = 50)
-    private String rol; // OPERADOR, ADMINISTRADOR, CLIENTE
+    private String rol;
+
+    @Column(nullable = false)
+    private boolean estado;
+
 }
