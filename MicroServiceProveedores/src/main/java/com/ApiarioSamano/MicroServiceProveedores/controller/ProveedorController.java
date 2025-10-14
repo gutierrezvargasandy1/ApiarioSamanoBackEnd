@@ -48,10 +48,11 @@ public class ProveedorController implements IProveedorController {
         }
     }
 
+    // CAMBIO IMPORTANTE: @ModelAttribute en lugar de @RequestBody
     @Override
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ProveedorResponseDTO>> crearProveedor(
-            @Valid @RequestBody ProveedorRequestDTO requestDTO) {
+            @Valid @ModelAttribute ProveedorRequestDTO requestDTO) {
         try {
             ProveedorResponseDTO nuevoProveedor = proveedorService.crearProveedor(requestDTO);
             ApiResponse<ProveedorResponseDTO> response = ApiResponse.created(nuevoProveedor,
@@ -64,13 +65,13 @@ public class ProveedorController implements IProveedorController {
         }
     }
 
+    // CAMBIO IMPORTANTE: @ModelAttribute en lugar de @RequestBody
     @Override
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ProveedorResponseDTO>> actualizarProveedor(
             @PathVariable Long id,
-            @Valid @RequestBody ProveedorRequestDTO requestDTO) {
+            @Valid @ModelAttribute ProveedorRequestDTO requestDTO) {
         try {
-
             ProveedorResponseDTO actualizado = proveedorService.actualizarProveedor(id, requestDTO);
             ApiResponse<ProveedorResponseDTO> response = ApiResponse.success(actualizado,
                     "Proveedor actualizado exitosamente");

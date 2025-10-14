@@ -17,6 +17,7 @@ public class Proveedor {
     private Long id;
 
     @Lob
+    @Column(name = "fotografia", columnDefinition = "BYTEA")
     private byte[] fotografia;
 
     @Column(name = "nombre_empresa", nullable = false, length = 200)
