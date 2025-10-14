@@ -112,6 +112,7 @@ public class AuthService {
 
                 // Actualizar a la nueva contraseña
                 usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+                usuario.setEstado(false); 
                 usuarioRepository.save(usuario);
         }
 
