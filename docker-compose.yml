@@ -3,7 +3,9 @@ version: "3.9"
 services:
   # 🐘 Base de datos PostgreSQL
   postgres:
-    image: postgres:16
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
     container_name: microservice_postgres
     environment:
       POSTGRES_DB: UsuariosDB
@@ -13,6 +15,11 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apiario -d UsuariosDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - apiario-network
 
@@ -65,6 +72,24 @@ services:
     container_name: MicroServiceGeneradorCodigos
     ports:
       - "8084:8084"
+    networks:
+      - apiario-network
+
+# 🏭 MicroServiceProveedores
+  microserviceproveedores:
+    image: microserviceproveedores:1.0
+    container_name: MicroServiceProveedores
+    depends_on:
+      - postgres
+    build:
+      context: ./MicroServiceProveedores
+      dockerfile: Dockerfile
+    ports:
+      - "8086:8086"
+    environment:
+     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ProveedoresDB
+     SPRING_DATASOURCE_USERNAME: apiario
+     SPRING_DATASOURCE_PASSWORD: apiario123
     networks:
       - apiario-network
 

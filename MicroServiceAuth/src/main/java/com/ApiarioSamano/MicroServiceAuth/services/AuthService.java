@@ -93,6 +93,7 @@ public class AuthService {
                 }
                 usuario.setOtp(null);
                 usuario.setOtpExpiracion(null);
+                usuario.setEstado(false);
                 usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
                 usuarioRepository.save(usuario);
 
@@ -112,7 +113,7 @@ public class AuthService {
 
                 // Actualizar a la nueva contraseña
                 usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
-                usuario.setEstado(false); 
+                usuario.setEstado(false);
                 usuarioRepository.save(usuario);
         }
 

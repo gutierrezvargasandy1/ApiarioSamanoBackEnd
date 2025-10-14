@@ -1,0 +1,30 @@
+package com.ApiarioSamano.MicroServiceProveedores.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "Proveedores")
+public class Proveedor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Lob
+    private byte[] fotografia;
+
+    @Column(name = "nombre_empresa", nullable = false, length = 200)
+    private String nombreEmpresa;
+
+    @Column(name = "num_telefono", length = 20)
+    private String numTelefono;
+
+    @Column(name = "material_provee", length = 200)
+    private String materialProvee;
+}

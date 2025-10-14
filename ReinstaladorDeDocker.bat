@@ -5,7 +5,7 @@ echo =====================================================
 echo 🚀 INICIANDO PROCESO DE REINSTALACIÓN Y CREACIÓN DE IMÁGENES DOCKER
 echo =====================================================
 
-cd /d "C:\Users\Andy\Desktop\ApiarioSamanoBackEnd"
+cd /d "C:\Users\andre\OneDrive\Escritorio\ApiarioSamanoBackEnd"
 
 :: =============================
 :: Lista de microservicios CON NOMBRES DE IMAGEN EN MINÚSCULAS
