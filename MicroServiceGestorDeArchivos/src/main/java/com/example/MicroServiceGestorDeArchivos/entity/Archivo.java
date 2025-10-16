@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "archivos")
 public class Archivo {
     @Id
-    private String id; 
+    private String id;
 
     @Column(nullable = false)
     private String nombreOriginal;
@@ -30,19 +30,6 @@ public class Archivo {
     private String tipoMime;
 
     private Long tamaño;
-
-    // Metadata para relación con otras entidades
-    @Column(name = "servicio_origen", nullable = false)
-    private String servicioOrigen; 
-
-    @Column(name = "entidad_origen", nullable = false)
-    private String entidadOrigen; 
-
-    @Column(name = "entidad_id", nullable = false)
-    private String entidadId; 
-
-    @Column(name = "campo_asociado")
-    private String campoAsociado; 
 
     // Metadata para imágenes
     private Integer ancho;

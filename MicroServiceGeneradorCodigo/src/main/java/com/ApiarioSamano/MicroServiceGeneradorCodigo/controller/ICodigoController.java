@@ -45,4 +45,11 @@ public interface ICodigoController {
          */
         @GetMapping("/contrasena")
         CodigoResponseDTO generarContrasena();
+
+        /**
+         * Genera un identificador único para archivos.
+         * GET /api/codigos/archivo
+         */
+        @GetMapping("/archivo")
+        CodigoResponseDTO generarIdArchivo();
 }

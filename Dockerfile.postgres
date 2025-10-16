@@ -201,11 +201,6 @@ CREATE TABLE IF NOT EXISTS archivos (
     tipo_mime VARCHAR(100) NOT NULL,
     tamaño BIGINT NOT NULL,
     
-    -- Metadata de relación con otras entidades
-    servicio_origen VARCHAR(100) NOT NULL,
-    entidad_origen VARCHAR(100) NOT NULL,
-    entidad_id VARCHAR(100) NOT NULL,
-    campo_asociado VARCHAR(100),
     
     -- Metadata específica para imágenes
     ancho INTEGER,
@@ -218,63 +213,6 @@ CREATE TABLE IF NOT EXISTS archivos (
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Índices para mejor performance
-CREATE INDEX idx_archivos_servicio_entidad ON archivos(servicio_origen, entidad_origen, entidad_id);
-CREATE INDEX idx_archivos_fecha_subida ON archivos(fecha_subida);
-CREATE INDEX idx_archivos_activo ON archivos(activo);
-CREATE INDEX idx_archivos_hash ON archivos(hash);
-
--- Datos de ejemplo para pruebas
-INSERT INTO archivos (
-    id, nombre_original, nombre_almacenado, ruta_completa, 
-    tipo_mime, tamaño, servicio_origen, entidad_origen, 
-    entidad_id, campo_asociado, ancho, alto, hash
-) VALUES 
-(
-    'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    'proveedor_abc.jpg',
-    'a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg',
-    '/home/usuario/archivos-app/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg',
-    'image/jpeg',
-    2048576,
-    'microservice-proveedores',
-    'Proveedor',
-    '1',
-    'fotografia',
-    1920,
-    1080,
-    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-),
-(
-    'b2c3d4e5-f6g7-8901-bcde-f23456789012',
-    'herramienta_ahumador.png',
-    'b2c3d4e5-f6g7-8901-bcde-f23456789012.png',
-    '/home/usuario/archivos-app/b2c3d4e5-f6g7-8901-bcde-f23456789012.png',
-    'image/png',
-    1536000,
-    'microservice-almacen',
-    'Herramienta',
-    '1',
-    'foto',
-    1200,
-    800,
-    'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f'
-),
-(
-    'c3d4e5f6-g7h8-9012-cdef-345678901234',
-    'miel_flor_naranjo.jpg',
-    'c3d4e5f6-g7h8-9012-cdef-345678901234.jpg',
-    '/home/usuario/archivos-app/c3d4e5f6-g7h8-9012-cdef-345678901234.jpg',
-    'image/jpeg',
-    3072000,
-    'microservice-produccion',
-    'Lote',
-    '1',
-    'imagen_producto',
-    2560,
-    1440,
-    'b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2'
-);
 
 -- Crear usuario específico para el file storage (opcional, para producción)
 DO $$ 

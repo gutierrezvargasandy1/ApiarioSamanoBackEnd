@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.ApiarioSamano.MicroServiceProveedores.service.IProveedorService;
 import jakarta.validation.Valid;
 import java.util.List;
+
 /*
  * Rutas disponibles para usar en Postman (localhost:8086):
  *
@@ -88,7 +89,6 @@ public class ProveedorController implements IProveedorController {
         }
     }
 
-    // CAMBIO IMPORTANTE: @ModelAttribute en lugar de @RequestBody
     @Override
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ProveedorResponseDTO>> crearProveedor(

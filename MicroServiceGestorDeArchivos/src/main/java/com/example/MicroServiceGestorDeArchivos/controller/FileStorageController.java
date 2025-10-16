@@ -5,13 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.MicroServiceGestorDeArchivos.dto.FileUploadRequest;
 import com.example.MicroServiceGestorDeArchivos.dto.FileUploadResponse;
-import com.example.MicroServiceGestorDeArchivos.entity.Archivo;
 import com.example.MicroServiceGestorDeArchivos.service.FileStorageService;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
@@ -24,76 +21,59 @@ public class FileStorageController {
         this.fileStorageService = fileStorageService;
     }
 
+    /**
+     * 📤 Subir un archivo
+     */
     @PostMapping("/upload")
-    public ResponseEntity<FileUploadResponse> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("servicioOrigen") String servicioOrigen,
-            @RequestParam("entidadOrigen") String entidadOrigen,
-            @RequestParam("entidadId") String entidadId,
-            @RequestParam(value = "campoAsociado", required = false) String campoAsociado) {
-
-        FileUploadRequest request = new FileUploadRequest(servicioOrigen, entidadOrigen, entidadId, campoAsociado);
-        
+    public ResponseEntity<FileUploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            FileUploadResponse response = fileStorageService.guardarArchivo(file, request);
+            FileUploadResponse response = fileStorageService.guardarArchivo(file);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    @GetMapping("/download/{fileId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileId) {
+    /**
+     * 📥 Descargar un archivo
+     */
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String id) {
+        return fileStorageService.descargarArchivo(id);
+    }
+
+    /**
+     * 👁️ Visualizar un archivo en el navegador
+     */
+    @GetMapping("/view/{id}")
+    public ResponseEntity<Resource> viewFile(@PathVariable String id) {
+        return fileStorageService.verArchivo(id);
+    }
+
+    /**
+     * 🗑️ Eliminar un archivo físico y su registro en la BD
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFile(@PathVariable String id) {
         try {
-            return fileStorageService.descargarArchivo(fileId);
-        } catch (IOException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/view/{fileId}")
-    public ResponseEntity<Resource> viewFile(@PathVariable String fileId) {
-        try {
-            return fileStorageService.visualizarArchivo(fileId);
-        } catch (IOException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/entidad/{servicioOrigen}/{entidadOrigen}/{entidadId}")
-    public ResponseEntity<List<Archivo>> getFilesByEntity(
-            @PathVariable String servicioOrigen,
-            @PathVariable String entidadOrigen,
-            @PathVariable String entidadId) {
-        
-        List<Archivo> archivos = fileStorageService.obtenerArchivosPorEntidad(
-                servicioOrigen, entidadOrigen, entidadId);
-        return ResponseEntity.ok(archivos);
-    }
-
-    @GetMapping("/entidad/{servicioOrigen}/{entidadOrigen}/{entidadId}/{campoAsociado}")
-    public ResponseEntity<Archivo> getFileByField(
-            @PathVariable String servicioOrigen,
-            @PathVariable String entidadOrigen,
-            @PathVariable String entidadId,
-            @PathVariable String campoAsociado) {
-        
-        Archivo archivo = fileStorageService.obtenerArchivoPorCampo(
-                servicioOrigen, entidadOrigen, entidadId, campoAsociado);
-        
-        if (archivo == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(archivo);
-    }
-
-    @DeleteMapping("/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable String fileId) {
-        try {
-            fileStorageService.eliminarArchivo(fileId);
+            fileStorageService.eliminarArchivo(id);
             return ResponseEntity.noContent().build();
-        } catch (IOException e) {
-            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * ♻️ Actualizar solo el archivo físico sin tocar la BD
+     */
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Void> updateFilePhysical(@PathVariable String id,
+            @RequestParam("file") MultipartFile newFile) {
+        try {
+            fileStorageService.actualizarArchivoFisico(id, newFile);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

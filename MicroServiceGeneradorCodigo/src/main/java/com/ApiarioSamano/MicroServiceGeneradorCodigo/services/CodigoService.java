@@ -6,6 +6,7 @@ import com.ApiarioSamano.MicroServiceGeneradorCodigo.exceptions.CodigoException;
 
 import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
 
@@ -62,5 +63,19 @@ public class CodigoService {
         String fechaStr = fecha.format(formato);
         int aleatorio = 1000 + random.nextInt(9000);
         return zona.toUpperCase() + "-" + producto.toUpperCase() + "-" + fechaStr + "-" + aleatorio;
+    }
+
+    public String generadorDeIdArchivos() {
+        LocalDateTime fecha = LocalDateTime.now();
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String fechaStr = fecha.format(formato);
+
+        // Generar una cadena aleatoria corta
+        StringBuilder aleatorio = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            aleatorio.append(CHARACTERS.charAt(secureRandom.nextInt(CHARACTERS.length())));
+        }
+
+        return "FILE-" + fechaStr + "-" + aleatorio;
     }
 }

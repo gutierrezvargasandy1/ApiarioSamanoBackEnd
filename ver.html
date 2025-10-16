@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualizar Archivo</title>
+</head>
+<body>
+    <button id="verArchivo">Ver Archivo</button>
+
+    <script>
+        const fileId = "FILE-20251016212243-%24lNLP%26"; // ID con URL encoding
+        const token = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDY0MjQzOCwiZXhwIjoxNzYwNzI4ODM4fQ.0Gs3umr0chCCO90M4pCTwjfNDENitpBZrtY4xlMfpmePtUqZ5Uj2Q2PjmrG5sdfc";
+
+        document.getElementById("verArchivo").addEventListener("click", () => {
+            fetch(`http://localhost:8089/api/files/view/${fileId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Error al obtener el archivo: ' + res.status);
+                return res.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank'); // abre el archivo en una nueva pestaña
+            })
+            .catch(err => console.error(err));
+        });
+    </script>
+</body>
+</html>

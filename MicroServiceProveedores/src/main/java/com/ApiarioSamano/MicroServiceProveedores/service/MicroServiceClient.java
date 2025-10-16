@@ -29,8 +29,26 @@ public class MicroServiceClient {
     @Value("${microservicio.archivos.url}")
     private String fileServiceUrl;
 
-    // ✅ Subir un archivo al microservicio de archivos
-    public ArchivoDTO uploadFile(File file, String servicioOrigen, String entidadOrigen, String entidadId, String campoAsociado) {
+    @Value("${microservicio.archivos.jwt}")
+    private String jwtToken;
+
+    @Value("${microservicio.generador.url}")
+    private String generadorCodigoUrl;
+
+    /**
+     * 🔹 Genera los headers con el JWT incluido
+     */
+    private HttpHeaders createHeaders(MediaType contentType) {
+        HttpHeaders headers = new HttpHeaders();
+        if (contentType != null) {
+            headers.setContentType(contentType);
+        }
+        headers.setBearerAuth(jwtToken);
+        return headers;
+    }
+
+    public ArchivoDTO uploadFile(File file, String servicioOrigen, String entidadOrigen, String entidadId,
+            String campoAsociado) {
         String url = fileServiceUrl + "/upload";
         log.info("Subiendo archivo a: {}", url);
 
@@ -41,60 +59,72 @@ public class MicroServiceClient {
         body.add("entidadId", entidadId);
         body.add("campoAsociado", campoAsociado);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body,
+                createHeaders(MediaType.MULTIPART_FORM_DATA));
 
         ResponseEntity<ArchivoDTO> response = restTemplate.postForEntity(url, requestEntity, ArchivoDTO.class);
         return response.getBody();
     }
 
-    // ✅ Obtener lista de archivos (metadatos)
     public List<ArchivoDTO> getFilesByEntity(String servicioOrigen, String entidadOrigen, String entidadId) {
         String url = String.format("%s/entidad/%s/%s/%s", fileServiceUrl, servicioOrigen, entidadOrigen, entidadId);
         log.info("Obteniendo archivos de entidad: {}", url);
 
-        ResponseEntity<List> response = restTemplate.getForEntity(url, List.class);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders(null));
+        ResponseEntity<List> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, List.class);
         return response.getBody();
     }
 
-    // ✅ Obtener archivo por campo (metadatos)
-    public ArchivoDTO getFileByField(String servicioOrigen, String entidadOrigen, String entidadId, String campoAsociado) {
-        String url = String.format("%s/entidad/%s/%s/%s/%s", fileServiceUrl, servicioOrigen, entidadOrigen, entidadId, campoAsociado);
+    public ArchivoDTO getFileByField(String servicioOrigen, String entidadOrigen, String entidadId,
+            String campoAsociado) {
+        String url = String.format("%s/entidad/%s/%s/%s/%s", fileServiceUrl, servicioOrigen, entidadOrigen, entidadId,
+                campoAsociado);
         log.info("Obteniendo archivo por campo: {}", url);
 
-        ResponseEntity<ArchivoDTO> response = restTemplate.getForEntity(url, ArchivoDTO.class);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders(null));
+        ResponseEntity<ArchivoDTO> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity,
+                ArchivoDTO.class);
         return response.getBody();
     }
 
-    // ✅ Descargar archivo real (Resource)
     public Resource downloadFile(String fileId) {
         String url = fileServiceUrl + "/download/" + fileId;
         log.info("Descargando archivo: {}", url);
 
-        ResponseEntity<Resource> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                Resource.class
-        );
-
+        HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders(null));
+        ResponseEntity<Resource> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, Resource.class);
         return response.getBody();
     }
 
-    // ✅ Visualizar archivo real (Resource)
     public Resource viewFile(String fileId) {
         String url = fileServiceUrl + "/view/" + fileId;
         log.info("Visualizando archivo: {}", url);
 
-        ResponseEntity<Resource> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                HttpEntity.EMPTY,
-                Resource.class
-        );
-
+        HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders(null));
+        ResponseEntity<Resource> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, Resource.class);
         return response.getBody();
+    }
+
+    public String generarIdArchivo() {
+        String url = generadorCodigoUrl + "/api/codigos/archivo";
+        log.info("Solicitando ID de archivo a: {}", url);
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(createHeaders(null));
+
+        try {
+            ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, Object.class);
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                // Extrae el campo "codigo" del JSON recibido
+                var responseBody = (java.util.Map<String, Object>) response.getBody();
+                return (String) responseBody.get("codigo");
+            } else {
+                log.error("Error al generar ID de archivo. Respuesta: {}", response.getStatusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("Error al comunicarse con el microservicio generador de códigos: {}", e.getMessage());
+            return null;
+        }
     }
 }

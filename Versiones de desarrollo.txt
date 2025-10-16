@@ -84,4 +84,16 @@ mvn clean package -DskipTests
 
 docker system prune -a --volumes -f
 
-docker build -t microservice_postgres_custom -f Dockerfile.postgres .
+docker build -t microservice_postgres -f Dockerfile.postgres .
+
+
+curl.exe -X POST `
+  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDY0MjQzOCwiZXhwIjoxNzYwNzI4ODM4fQ.0Gs3umr0chCCO90M4pCTwjfNDENitpBZrtY4xlMfpmePtUqZ5Uj2Q2PjmrG5sdfc" `
+  -F "file=@C:\Users\andre\OneDrive\Imágenes\Capturas de pantalla\Captura de pantalla 2025-08-21 191639.png" `
+  http://localhost:8089/api/files/upload
+
+
+curl.exe -X GET `
+  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDY0MjQzOCwiZXhwIjoxNzYwNzI4ODM4fQ.0Gs3umr0chCCO90M4pCTwjfNDENitpBZrtY4xlMfpmePtUqZ5Uj2Q2PjmrG5sdfc" `
+  -o "C:\Users\andre\OneDrive\Escritorio\prueba_descargada.txt" `
+  http://localhost:8089/api/files/download/FILE-20251016204721-d9*dAO

@@ -3,7 +3,7 @@ version: "3.9"
 services:
   # 🐘 Base de datos PostgreSQL
   postgres:
-    image: microservice_postgres_custom
+    image: microservice_postgres
     container_name: microservice_postgres
     environment:
       POSTGRES_DB: UsuariosDB
@@ -68,7 +68,7 @@ services:
     networks:
       - apiario-network
 
-# 📁 MicroServiceGestorDeArchivos
+  # 📁 MicroServiceGestorDeArchivos
   microservicegestordearchivos:
     image: microservicegestordearchivos:1.0
     container_name: MicroServiceGestorDeArchivos
@@ -78,10 +78,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/FileStorageDB
       SPRING_DATASOURCE_USERNAME: apiario
       SPRING_DATASOURCE_PASSWORD: apiario123
+      MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos/archivo
+      APP_STORAGE_LOCAL_DIRECTORY: /home/usuario/archivos-app
+      APP_STORAGE_MAX_FILE_SIZE: 10485760
+      APP_SERVER_URL: http://localhost:8089
+    volumes:
+      - ./archivos-app:/home/usuario/archivos-app
+        
     networks:
       - apiario-network
 
-# MicroServiceProveedores
+  # MicroServiceProveedores
   microserviceproveedores:
     image: microserviceproveedores:1.0
     container_name: MicroServiceProveedores
@@ -97,8 +104,6 @@ services:
       MICROSERVICIO_GESTORARCHIVOS_URL: http://microservicegestordearchivos:8089/api/files
     networks:
       - apiario-network
-
-  
 
 volumes:
   pgdata:

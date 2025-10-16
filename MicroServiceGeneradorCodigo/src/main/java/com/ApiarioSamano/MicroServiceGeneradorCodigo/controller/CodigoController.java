@@ -43,4 +43,13 @@ public class CodigoController implements ICodigoController {
                 "OK",
                 "Código de almacén generado para el producto " + request.getProducto() + ".");
     }
+
+    @Override
+    public CodigoResponseDTO generarIdArchivo() {
+        String idArchivo = codigoService.generadorDeIdArchivos();
+        return new CodigoResponseDTO(
+                idArchivo,
+                "OK",
+                "ID de archivo generado correctamente.");
+    }
 }
