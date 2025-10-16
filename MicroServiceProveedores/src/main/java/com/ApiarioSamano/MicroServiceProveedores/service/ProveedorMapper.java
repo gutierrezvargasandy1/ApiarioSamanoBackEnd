@@ -22,16 +22,19 @@ public class ProveedorMapper implements IProveedorMapper {
         proveedor.setNumTelefono(requestDTO.getNumTelefono());
         proveedor.setMaterialProvee(requestDTO.getMaterialProvee());
 
-        // Convertir MultipartFile a byte[]
+        // Manejar la fotografía como Base64 para PostgreSQL
         if (requestDTO.getFotografia() != null && !requestDTO.getFotografia().isEmpty()) {
-            try {
-                proveedor.setFotografia(requestDTO.getFotografia().getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException("Error al procesar la imagen: " + e.getMessage());
+            // Si viene como data URL completa (data:image/png;base64,...)
+            if (requestDTO.getFotografia().startsWith("data:image")) {
+                // Extraer solo la parte Base64 (después de la coma)
+                String base64Data = requestDTO.getFotografia().split(",")[1];
+                proveedor.setFotografia(base64Data);
+            } else {
+                // Si ya viene como Base64 puro
+                proveedor.setFotografia(requestDTO.getFotografia());
             }
         } else {
-            // Si no se envía nueva imagen, mantener la existente (en caso de actualización)
-            // Para creación, se queda como null
+            proveedor.setFotografia(null);
         }
     }
 
@@ -43,9 +46,32 @@ public class ProveedorMapper implements IProveedorMapper {
         responseDTO.setNumTelefono(proveedor.getNumTelefono());
         responseDTO.setMaterialProvee(proveedor.getMaterialProvee());
 
-        // USAR EL MÉTODO setFotografia() QUE CONVIERTE A Base64 AUTOMÁTICAMENTE
-        responseDTO.setFotografia(proveedor.getFotografia());
+        // Convertir Base64 almacenado a data URL para la respuesta
+        if (proveedor.getFotografia() != null && !proveedor.getFotografia().isEmpty()) {
+            // Puedes detectar el tipo de imagen si lo guardaste por separado
+            // Por simplicidad, usamos image/jpeg o image/png
+            String mimeType = detectMimeType(proveedor.getFotografia());
+            String dataUrl = "data:" + mimeType + ";base64," + proveedor.getFotografia();
+            responseDTO.setFotografia(dataUrl);
+        } else {
+            responseDTO.setFotografia(null);
+        }
 
         return responseDTO;
     }
+
+    // Método auxiliar para detectar el tipo MIME (opcional)
+    private String detectMimeType(String base64) {
+        // Los primeros caracteres pueden indicar el tipo
+        if (base64.startsWith("/9j") || base64.startsWith("/9J")) {
+            return "image/jpeg";
+        } else if (base64.startsWith("iVBOR")) {
+            return "image/png";
+        } else if (base64.startsWith("R0lGOD")) {
+            return "image/gif";
+        } else {
+            return "image/jpeg"; // Por defecto
+        }
+    }
 }
+

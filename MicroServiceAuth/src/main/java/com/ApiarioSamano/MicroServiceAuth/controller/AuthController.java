@@ -66,6 +66,7 @@ public class AuthController implements IAuthController {
         String nuevaContrasena = request.get("nuevaContrasena");
 
         authService.cambiarContrasenaTemporal(email, contrasenaTemporal, nuevaContrasena);
+            
 
         return ResponseEntity.ok(ResponseDTO.success(
                 "Contraseña actualizada correctamente",

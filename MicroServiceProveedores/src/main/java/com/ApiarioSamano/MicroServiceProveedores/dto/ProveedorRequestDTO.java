@@ -3,9 +3,6 @@ package com.ApiarioSamano.MicroServiceProveedores.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import org.springframework.web.multipart.MultipartFile;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -24,5 +21,5 @@ public class ProveedorRequestDTO {
     @Size(max = 200, message = "El material no puede exceder 200 caracteres")
     private String materialProvee;
 
-    private MultipartFile fotografia;
+    private String fotografia; // Ahora acepta rutas o base64
 }

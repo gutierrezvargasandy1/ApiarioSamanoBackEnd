@@ -11,7 +11,47 @@ import org.springframework.web.bind.annotation.*;
 import com.ApiarioSamano.MicroServiceProveedores.service.IProveedorService;
 import jakarta.validation.Valid;
 import java.util.List;
-
+/*
+ * Rutas disponibles para usar en Postman (localhost:8086):
+ *
+ * 1. Listar todos los proveedores (GET)
+ *    [GET] http://localhost:8086/api/proveedores
+ *
+ * 2. Obtener proveedor por ID (GET)
+ *    [GET] http://localhost:8086/api/proveedores/{id}
+ *
+ * 3. Crear proveedor (POST, multipart/form-data)
+ *    [POST] http://localhost:8086/api/proveedores
+ *    Content-Type: multipart/form-data
+ *    Body (ejemplo):
+ *      nombre: "Proveedor Ejemplo"
+ *      direccion: "Calle Falsa 123"
+ *      telefono: "1234567890"
+ *      email: "proveedor@ejemplo.com"
+ *      // otros campos de ProveedorRequestDTO
+ *
+ * 4. Actualizar proveedor por ID (PUT, multipart/form-data)
+ *    [PUT] http://localhost:8086/api/proveedores/{id}
+ *    Content-Type: multipart/form-data
+ *    Body (ejemplo):
+ *      nombre: "Proveedor Actualizado"
+ *      direccion: "Nueva Direccion 456"
+ *      telefono: "0987654321"
+ *      email: "actualizado@ejemplo.com"
+ *      // otros campos de ProveedorRequestDTO
+ *
+ * 5. Eliminar proveedor por ID (DELETE)
+ *    [DELETE] http://localhost:8086/api/proveedores/{id}
+ *
+ * Ejemplo JSON para ProveedorRequestDTO (solo para referencia, usar multipart/form-data en Postman):
+ * {
+ *   "nombre": "Proveedor Ejemplo",
+ *   "direccion": "Calle Falsa 123",
+ *   "telefono": "1234567890",
+ *   "email": "proveedor@ejemplo.com"
+ *   // otros campos según el DTO
+ * }
+ */
 @RestController
 @RequestMapping("/api/proveedores")
 @RequiredArgsConstructor

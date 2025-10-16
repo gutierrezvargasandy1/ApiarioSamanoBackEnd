@@ -16,9 +16,8 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
-    @Column(name = "fotografia", columnDefinition = "BYTEA")
-    private byte[] fotografia;
+   @Column(columnDefinition = "TEXT") 
+    private String fotografia; 
 
     @Column(name = "nombre_empresa", nullable = false, length = 200)
     private String nombreEmpresa;

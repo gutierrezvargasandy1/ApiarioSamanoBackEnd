@@ -5,12 +5,12 @@ echo =====================================================
 echo 🚀 INICIANDO PROCESO DE REINSTALACIÓN Y CREACIÓN DE IMÁGENES DOCKER
 echo =====================================================
 
-cd /d "C:\Users\andre\OneDrive\Escritorio\ApiarioSamanoBackEnd"
+cd /d "C:\Users\Andy\Desktop\ApiarioSamanoBackEnd"
 
 :: =============================
 :: Lista de microservicios CON NOMBRES DE IMAGEN EN MINÚSCULAS
 :: =============================
-set servicios=MicroServiceUsuario:microserviceusuario MicroServiceProveedores:microserviceproveedores MicroServiceProduccion:microserviceproduccion MicroServiceNotificacionesGmail:microservicenotificacionesgmail MicroServiceGeneradorCodigo:microservicegeneradorcodigo MicroServiceAuth:microserviceauth MicroServiceApiarios:microserviceapiarios MicroServiceAlmacen:microservicealmacen
+set servicios= MicroServiceProveedores:microserviceproveedores MicroServiceUsuario:microserviceusuario  MicroServiceProduccion:microserviceproduccion MicroServiceNotificacionesGmail:microservicenotificacionesgmail MicroServiceGeneradorCodigo:microservicegeneradorcodigo MicroServiceAuth:microserviceauth MicroServiceApiarios:microserviceapiarios MicroServiceAlmacen:microservicealmacen MicroServiceGestorDeArchivos:microservicegestordearchivos
 
 set reintentos=3
 
