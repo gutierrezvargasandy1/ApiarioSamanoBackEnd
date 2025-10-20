@@ -38,38 +38,56 @@ EOF
 RUN cat > /docker-entrypoint-initdb.d/03-apiarios.sql <<'EOF'
 \connect ApiariosDB
 
+CREATE TABLE IF NOT EXISTS Receta (
+    id SERIAL PRIMARY KEY,
+    descripcion VARCHAR(500),
+    fecha_de_creacion TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS RecetaMedicamento (
+    id SERIAL PRIMARY KEY,
+    id_receta INT REFERENCES Receta(id) ON DELETE CASCADE,
+    id_medicamento INT
+);
+
 CREATE TABLE IF NOT EXISTS HistorialMedico (
     id SERIAL PRIMARY KEY,
-    medicamentos VARCHAR(255),
-    detalles VARCHAR(500),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     notas VARCHAR(500)
 );
 
-INSERT INTO HistorialMedico (medicamentos, detalles, notas)
-VALUES 
-('Antibiótico Apistán, Vitaminas B12', 'Control de varroa aplicado', 'Colmena en buen estado de salud'),
-('Azúcar glas, Suplemento proteico', 'Alimentación complementaria', 'Revisar en 15 días'),
-('Fumagilina, Timol', 'Prevención de nosemosis', 'Monitorear temperatura'),
-('Amitraz, Jarabe de maíz', 'Tratamiento contra ácaros', 'Excelente respuesta al tratamiento'),
-('Extracto de menta, Polen', 'Fortalecimiento post-cosecha', 'Colmena recuperándose bien');
+CREATE TABLE IF NOT EXISTS HistorialRecetas (
+    id SERIAL PRIMARY KEY,
+    id_historial_medico INT REFERENCES HistorialMedico(id) ON DELETE CASCADE,
+    id_receta INT REFERENCES Receta(id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS Apiarios (
     id SERIAL PRIMARY KEY,
-    numero_apiario INT NOT NULL,
+    numero_apiario INT NOT NULL UNIQUE,
     ubicacion VARCHAR(200) NOT NULL,
     salud VARCHAR(100),
-    medicion_actual DECIMAL(10,2),
+    id_receta INT REFERENCES Receta(id),
     id_historial_medico INT REFERENCES HistorialMedico(id)
 );
 
-INSERT INTO Apiarios (numero_apiario, ubicacion, salud, medicion_actual, id_historial_medico)
+INSERT INTO HistorialMedico (notas)
 VALUES 
-(1, 'Campo Norte - Coordenadas 19.4326, -99.1332', 'Excelente', 85.50, 1),
-(2, 'Valle Florido - Coordenadas 19.4350, -99.1350', 'Buena', 78.25, 2),
-(3, 'Loma Alta - Coordenadas 19.4300, -99.1300', 'Regular', 65.80, 3),
-(4, 'Pradera Verde - Coordenadas 19.4380, -99.1380', 'Excelente', 92.10, 4),
-(5, 'Cerro Dulce - Coordenadas 19.4330, -99.1320', 'Buena', 81.75, 5);
+('Colmena en buen estado de salud'),
+('Revisar en 15 días'),
+('Monitorear temperatura'),
+('Excelente respuesta al tratamiento'),
+('Colmena recuperándose bien');
+
+INSERT INTO Apiarios (numero_apiario, ubicacion, salud, id_receta, id_historial_medico)
+VALUES 
+(1, 'Campo Norte - Coordenadas 19.4326, -99.1332', 'Excelente', 1, 1),
+(2, 'Valle Florido - Coordenadas 19.4350, -99.1350', 'Buena', 2, 2),
+(3, 'Loma Alta - Coordenadas 19.4300, -99.1300', 'Regular', 3, 3),
+(4, 'Pradera Verde - Coordenadas 19.4380, -99.1380', 'Excelente', 4, 4),
+(5, 'Cerro Dulce - Coordenadas 19.4330, -99.1320', 'Buena', 5, 5);
 EOF
+
 
 RUN cat > /docker-entrypoint-initdb.d/04-produccion.sql <<'EOF'
 \connect ProduccionDB
@@ -155,6 +173,26 @@ CREATE TABLE IF NOT EXISTS MateriasPrimas (
     id_almacen INT REFERENCES Almacen(id),
     id_proveedor INT
 );
+
+CREATE TABLE IF NOT EXISTS Medicamento (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,     
+    descripcion VARCHAR(500),
+    id_almacen INT REFERENCES Almacen(id)
+);
+
+INSERT INTO Medicamento (nombre, descripcion, id_almacen)
+VALUES
+('Antibiótico Apistán', 'Tratamiento para ácaros Varroa', 1),
+('Vitaminas B12', 'Suplemento vitamínico para colmenas', 1),
+('Azúcar glas', 'Alimentación complementaria', 2),
+('Suplemento proteico', 'Refuerzo nutricional', 2),
+('Fumagilina', 'Prevención de nosemosis', 3),
+('Timol', 'Control de ácaros y patógenos', 3),
+('Amitraz', 'Tratamiento contra ácaros', 4),
+('Jarabe de maíz', 'Alimento líquido para colmenas', 4),
+('Extracto de menta', 'Refuerzo post-cosecha', 5),
+('Polen', 'Suplemento natural de proteínas', 5);
 
 INSERT INTO MateriasPrimas (nombre, cantidad, id_almacen, id_proveedor)
 VALUES 

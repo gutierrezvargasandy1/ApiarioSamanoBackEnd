@@ -43,14 +43,6 @@ public class FileStorageController {
     }
 
     /**
-     * 👁️ Visualizar un archivo en el navegador
-     */
-    @GetMapping("/view/{id}")
-    public ResponseEntity<Resource> viewFile(@PathVariable String id) {
-        return fileStorageService.verArchivo(id);
-    }
-
-    /**
      * 🗑️ Eliminar un archivo físico y su registro en la BD
      */
     @DeleteMapping("/{id}")

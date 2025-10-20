@@ -94,6 +94,15 @@ curl.exe -X POST `
 
 
 curl.exe -X GET `
-  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDY0MjQzOCwiZXhwIjoxNzYwNzI4ODM4fQ.0Gs3umr0chCCO90M4pCTwjfNDENitpBZrtY4xlMfpmePtUqZ5Uj2Q2PjmrG5sdfc" `
+  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDg0ODE4MiwiZXhwIjoxNzYwOTM0NTgyfQ.iveTn_LFkfe8cABh_WEWtZjuCHHPoYMNLQwHqrkdJkZ1hS7qsM4pOcLlvLPuinxo" `
   -o "C:\Users\andre\OneDrive\Escritorio\prueba_descargada.txt" `
-  http://localhost:8089/api/files/download/FILE-20251016204721-d9*dAO
+  http://localhost:8089/api/files/view/FILE-20251019043005-ng0w#Z
+
+
+curl.exe -X POST "http://localhost:8086/api/proveedores" ^
+  -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDg0ODE4MiwiZXhwIjoxNzYwOTM0NTgyfQ.iveTn_LFkfe8cABh_WEWtZjuCHHPoYMNLQwHqrkdJkZ1hS7qsM4pOcLlvLPuinxo" ^
+  -F "nombreEmpresa=Mi Empresa Ejemplo" ^
+  -F "numTelefono=1234567890" ^
+  -F "nombreReprecentante=Juan Pérez" ^
+  -F "materialProvee=Miel y cera" ^
+  -F "fotografia=@C:\Users\andre\OneDrive\Imágenes\Capturas de pantalla\Captura de pantalla 2025-08-21 191639.png"

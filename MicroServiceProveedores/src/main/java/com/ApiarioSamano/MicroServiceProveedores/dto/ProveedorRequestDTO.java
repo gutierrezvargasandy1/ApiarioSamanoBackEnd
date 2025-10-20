@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.io.File;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -28,5 +30,5 @@ public class ProveedorRequestDTO {
     @Size(max = 200, message = "El material no puede exceder 200 caracteres")
     private String materialProvee;
 
-    private String fotografia;
+    private MultipartFile fotografia;
 }
