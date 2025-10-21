@@ -16,4 +16,7 @@ public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> 
 
     // Buscar medicamentos por nombre (opcional)
     List<Medicamento> findByNombreContainingIgnoreCase(String nombre);
+
+    List<Medicamento> findByIdProveedor(Integer idProveedor);
+
 }

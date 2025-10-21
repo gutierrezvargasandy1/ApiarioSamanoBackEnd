@@ -2,10 +2,14 @@ package com.ApiarioSamano.MicroServiceApiarios.controller;
 
 import com.ApiarioSamano.MicroServiceApiarios.dto.CodigoResponse;
 import com.ApiarioSamano.MicroServiceApiarios.dto.ApiariosDTO.ApiarioRequestDTO;
+import com.ApiarioSamano.MicroServiceApiarios.dto.RecetaDTO.RecetaRequest;
 import com.ApiarioSamano.MicroServiceApiarios.model.Receta;
+import com.ApiarioSamano.MicroServiceApiarios.model.Apiarios;
 import com.ApiarioSamano.MicroServiceApiarios.service.ApiariosService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/apiarios")
@@ -14,44 +18,54 @@ public class ApiariosController {
 
     private final ApiariosService apiariosService;
 
-    // 🟢 Crear un nuevo apiario
-    @PostMapping("/nuevo")
-    public CodigoResponse crearApiario(@RequestBody ApiarioRequestDTO apiarioDTO) {
+    // 🟢 Crear nuevo apiario
+    @PostMapping
+    public CodigoResponse<Apiarios> crearApiario(@RequestBody ApiarioRequestDTO apiarioDTO) {
         return apiariosService.crearApiario(apiarioDTO);
     }
 
-    // 🟡 Modificar apiario existente
-    @PutMapping("/modificar/{id}")
-    public CodigoResponse modificarApiario(@PathVariable Long id, @RequestBody ApiarioRequestDTO apiario) {
-        return apiariosService.modificarApiario(id, apiario);
+    // 🟡 Modificar un apiario existente
+    @PutMapping("/{id}")
+    public CodigoResponse<Apiarios> modificarApiario(@PathVariable Long id,
+            @RequestBody ApiarioRequestDTO datosActualizados) {
+        return apiariosService.modificarApiario(id, datosActualizados);
     }
 
-    // 🔴 Eliminar apiario (sin eliminar historial médico)
-    @DeleteMapping("/eliminar/{id}")
-    public CodigoResponse eliminarApiario(@PathVariable Long id) {
+    // 🔴 Eliminar apiario
+    @DeleteMapping("/{id}")
+    public CodigoResponse<Void> eliminarApiario(@PathVariable Long id) {
         return apiariosService.eliminarApiario(id);
     }
 
-    // 🧾 Agregar receta a un apiario existente
-    @PostMapping("/{idApiario}/agregar-receta")
-    public CodigoResponse agregarReceta(@PathVariable Long idApiario, @RequestBody Receta receta) {
-        return apiariosService.agregarReceta(idApiario, receta);
+    // 🔹 Agregar receta a un apiario
+    @PostMapping("/{idApiario}/recetas")
+    public CodigoResponse<Receta> agregarReceta(@PathVariable Long idApiario,
+            @RequestBody RecetaRequest recetaDTO) {
+        return apiariosService.agregarReceta(idApiario, recetaDTO);
     }
 
-    // 🧹 Eliminar receta cumplida de un apiario
-    @DeleteMapping("/{idApiario}/eliminar-receta")
+    // 🔹 Eliminar receta cumplida
+    @DeleteMapping("/{idApiario}/recetas")
     public CodigoResponse eliminarRecetaCumplida(@PathVariable Long idApiario) {
         return apiariosService.eliminarRecetaCumplida(idApiario);
     }
 
+    // 🔍 Obtener todos los apiarios
     @GetMapping
-    public CodigoResponse obtenerTodos() {
+    public CodigoResponse<List<Apiarios>> obtenerTodos() {
         return apiariosService.obtenerTodos();
     }
 
     // 🔍 Obtener apiario por ID
     @GetMapping("/{id}")
-    public CodigoResponse obtenerPorId(@PathVariable Long id) {
+    public CodigoResponse<Apiarios> obtenerPorId(@PathVariable Long id) {
         return apiariosService.obtenerPorId(id);
     }
+
+    // 🔍 Obtener historial médico por ID con recetas y medicamentos completos
+    @GetMapping("/historial-medico/{idHistorial}")
+    public CodigoResponse obtenerHistorialMedicoPorId(@PathVariable Long idHistorial) {
+        return apiariosService.obtenerHistorialMedicoPorId(idHistorial);
+    }
+
 }

@@ -1,117 +1,66 @@
 package com.ApiarioSamano.MicroServiceProveedores.service;
 
-import com.ApiarioSamano.MicroServiceProveedores.dto.FileUploadResponse;
-import com.ApiarioSamano.MicroServiceProveedores.dto.ProveedorRequestDTO;
-import com.ApiarioSamano.MicroServiceProveedores.dto.ProveedorResponseDTO;
-
-import io.jsonwebtoken.io.IOException;
-
+import com.ApiarioSamano.MicroServiceProveedores.dto.CodigoResponse;
+import com.ApiarioSamano.MicroServiceProveedores.dto.ProveedorDTO.ProveedorRequest;
+import com.ApiarioSamano.MicroServiceProveedores.model.Proveedor;
+import com.ApiarioSamano.MicroServiceProveedores.repository.ProveedorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProveedorService {
 
-    private final List<ProveedorResponseDTO> proveedores = new ArrayList<>();
-    private final MicroServiceGestorArchivosClient archivosClient;
+    @Autowired
+    private ProveedorRepository proveedorRepository;
 
-    public ProveedorService(MicroServiceGestorArchivosClient archivosClient) {
-        this.archivosClient = archivosClient;
+    public CodigoResponse<List<Proveedor>> obtenerTodos() {
+        List<Proveedor> proveedores = proveedorRepository.findAll();
+        return new CodigoResponse<>(200, "Lista de proveedores obtenida correctamente", proveedores);
     }
 
-    // Obtener todos los proveedores
-    public List<ProveedorResponseDTO> obtenerTodosProveedores() {
-        List<ProveedorResponseDTO> result = new ArrayList<>();
-        for (ProveedorResponseDTO p : proveedores) {
-            ProveedorResponseDTO dto = new ProveedorResponseDTO(p);
-            if (p.getFotografia() != null) {
-                // Reemplazamos el fileId por la URL de vista
-                dto.setFotografiaUrl("/api/ver/view/" + p.getFotografia());
-            }
-            result.add(dto);
+    public CodigoResponse<Proveedor> obtenerPorId(Long id) {
+        Optional<Proveedor> proveedor = proveedorRepository.findById(id);
+        if (proveedor.isPresent()) {
+            return new CodigoResponse<>(200, "Proveedor encontrado", proveedor.get());
         }
-        return result;
+        return new CodigoResponse<>(404, "Proveedor no encontrado", null);
     }
 
-    // Obtener proveedor por ID
-    public ProveedorResponseDTO obtenerProveedorPorId(Long id) {
-        Optional<ProveedorResponseDTO> optionalProveedor = proveedores.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
+    public CodigoResponse<Proveedor> guardarProveedor(ProveedorRequest request) {
+        Proveedor proveedor = new Proveedor();
+        proveedor.setFotografia(request.getFotografia());
+        proveedor.setNombreEmpresa(request.getNombreEmpresa());
+        proveedor.setNombreRepresentante(request.getNombreReprecentante());
+        proveedor.setNumTelefono(request.getNumTelefono());
+        proveedor.setMaterialProvee(request.getMaterialProvee());
 
-        if (optionalProveedor.isEmpty()) {
-            throw new RuntimeException("Proveedor no encontrado con ID: " + id);
-        }
-
-        ProveedorResponseDTO proveedor = new ProveedorResponseDTO(optionalProveedor.get());
-        if (proveedor.getFotografia() != null) {
-            proveedor.setFotografiaUrl("/api/ver/view/" + proveedor.getFotografia());
-        }
-
-        return proveedor;
+        Proveedor guardado = proveedorRepository.save(proveedor);
+        return new CodigoResponse<>(201, "Proveedor registrado correctamente", guardado);
     }
 
-    // Crear proveedor
-    public ProveedorResponseDTO crearProveedor(ProveedorRequestDTO requestDTO) throws IOException, java.io.IOException {
-        String idFoto = null;
-
-        if (requestDTO.getFotografia() != null && !requestDTO.getFotografia().isEmpty()) {
-            FileUploadResponse response = archivosClient.uploadFile(requestDTO.getFotografia());
-            idFoto = response.getFileId();
+    public CodigoResponse<Proveedor> actualizarProveedor(Long id, ProveedorRequest request) {
+        Optional<Proveedor> proveedorExistente = proveedorRepository.findById(id);
+        if (proveedorExistente.isPresent()) {
+            Proveedor proveedor = proveedorExistente.get();
+            proveedor.setFotografia(request.getFotografia());
+            proveedor.setNombreEmpresa(request.getNombreEmpresa());
+            proveedor.setNombreRepresentante(request.getNombreReprecentante());
+            proveedor.setNumTelefono(request.getNumTelefono());
+            proveedor.setMaterialProvee(request.getMaterialProvee());
+            Proveedor actualizado = proveedorRepository.save(proveedor);
+            return new CodigoResponse<>(200, "Proveedor actualizado correctamente", actualizado);
         }
-
-        ProveedorResponseDTO proveedor = ProveedorResponseDTO.builder()
-                .nombreEmpresa(requestDTO.getNombreEmpresa())
-                .numTelefono(requestDTO.getNumTelefono())
-                .materialProvee(requestDTO.getMaterialProvee())
-                .fotografia(idFoto)
-                .build();
-
-        proveedores.add(proveedor);
-
-        // Agregar URL directa
-        if (idFoto != null) {
-            proveedor.setFotografiaUrl("/api/ver/view/" + idFoto);
-        }
-
-        return proveedor;
+        return new CodigoResponse<>(404, "Proveedor no encontrado", null);
     }
 
-    // Actualizar proveedor
-    public ProveedorResponseDTO actualizarProveedor(Long id, ProveedorRequestDTO requestDTO)
-            throws java.io.IOException {
-        Optional<ProveedorResponseDTO> optionalProveedor = proveedores.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-
-        if (optionalProveedor.isEmpty()) {
-            throw new RuntimeException("Proveedor no encontrado con ID: " + id);
+    public CodigoResponse<Void> eliminarProveedor(Long id) {
+        if (proveedorRepository.existsById(id)) {
+            proveedorRepository.deleteById(id);
+            return new CodigoResponse<>(200, "Proveedor eliminado correctamente", null);
         }
-
-        ProveedorResponseDTO proveedor = optionalProveedor.get();
-        proveedor.setNombreEmpresa(requestDTO.getNombreEmpresa());
-        proveedor.setNumTelefono(requestDTO.getNumTelefono());
-        proveedor.setMaterialProvee(requestDTO.getMaterialProvee());
-
-        // Actualizar fotografía si hay nueva
-        if (requestDTO.getFotografia() != null && !requestDTO.getFotografia().isEmpty()) {
-            try {
-                FileUploadResponse response = archivosClient.uploadFile(requestDTO.getFotografia());
-                proveedor.setFotografia(response.getFileId());
-                proveedor.setFotografiaUrl("/api/ver/view/" + response.getFileId());
-            } catch (IOException e) {
-                throw new RuntimeException("Error al subir la nueva foto: " + e.getMessage());
-            }
-        }
-
-        return proveedor;
-    }
-
-    // Eliminar proveedor
-    public void eliminarProveedor(Long id) {
-        proveedores.removeIf(p -> p.getId().equals(id));
+        return new CodigoResponse<>(404, "Proveedor no encontrado", null);
     }
 }

@@ -15,4 +15,7 @@ public interface HerramientasRepository extends JpaRepository<Herramientas, Long
 
     // Buscar herramientas por nombre (búsqueda parcial, ignorando mayúsculas)
     List<Herramientas> findByNombreContainingIgnoreCase(String nombre);
+
+    List<Herramientas> findByIdProveedor(Integer idProveedor);
+
 }

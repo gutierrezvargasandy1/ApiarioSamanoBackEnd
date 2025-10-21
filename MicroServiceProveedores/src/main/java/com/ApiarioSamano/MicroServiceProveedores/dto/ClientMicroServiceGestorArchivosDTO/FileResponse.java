@@ -1,4 +1,4 @@
-package com.ApiarioSamano.MicroServiceProveedores.dto;
+package com.ApiarioSamano.MicroServiceProveedores.dto.ClientMicroServiceGestorArchivosDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

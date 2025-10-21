@@ -25,4 +25,7 @@ public class Herramientas {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_almacen")
     private Almacen almacen;
+
+    @Column(name = "id_proveedor")
+    private Integer idProveedor;
 }

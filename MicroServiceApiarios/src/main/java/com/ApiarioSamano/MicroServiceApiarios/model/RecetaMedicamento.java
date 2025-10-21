@@ -1,5 +1,8 @@
 package com.ApiarioSamano.MicroServiceApiarios.model;
 
+import com.ApiarioSamano.MicroServiceApiarios.dto.MedicamentosDTO.MedicamentosResponse;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,8 +21,12 @@ public class RecetaMedicamento {
 
     @ManyToOne
     @JoinColumn(name = "id_receta")
+    @JsonIgnore
     private Receta receta;
 
     @Column(name = "id_medicamento")
     private Long idMedicamento;
+
+    @Transient
+    private MedicamentosResponse medicamentoInfo;
 }

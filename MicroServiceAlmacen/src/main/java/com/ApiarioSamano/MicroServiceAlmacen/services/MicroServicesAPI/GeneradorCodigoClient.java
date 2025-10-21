@@ -1,4 +1,4 @@
-package com.ApiarioSamano.MicroServiceAlmacen.services;
+package com.ApiarioSamano.MicroServiceAlmacen.services.MicroServicesAPI;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

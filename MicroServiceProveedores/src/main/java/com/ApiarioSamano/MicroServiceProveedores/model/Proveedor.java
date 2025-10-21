@@ -16,18 +16,19 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TEXT")
-    private String fotografia;
+    @Lob
+    @Column(name = "fotografia")
+    private byte[] fotografia;
 
-    @Column(name = "nombre_empresa", nullable = false, length = 200)
+    @Column(name = "nombreEmpresa", nullable = false, length = 200)
     private String nombreEmpresa;
 
-    @Column(name = "nombre-Reprecentante", nullable = false, length = 200)
-    private String nombreReprecentante;
+    @Column(name = "nombreRepresentante", nullable = false, length = 200)
+    private String nombreRepresentante;
 
-    @Column(name = "num_telefono", length = 20)
+    @Column(name = "numTelefono", length = 20)
     private String numTelefono;
 
-    @Column(name = "material_provee", length = 200)
+    @Column(name = "materialProvee", length = 200)
     private String materialProvee;
 }

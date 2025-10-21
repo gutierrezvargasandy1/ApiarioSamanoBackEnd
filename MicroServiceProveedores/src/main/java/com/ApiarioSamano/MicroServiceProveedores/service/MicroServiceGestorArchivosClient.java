@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ApiarioSamano.MicroServiceProveedores.config.JwtTokenProvider;
-import com.ApiarioSamano.MicroServiceProveedores.dto.FileUploadResponse;
+import com.ApiarioSamano.MicroServiceProveedores.dto.ClientMicroServiceGestorArchivosDTO.FileUploadResponse;
 
 import java.io.IOException;
 
