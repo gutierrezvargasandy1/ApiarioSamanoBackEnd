@@ -151,7 +151,10 @@ CREATE TABLE IF NOT EXISTS Herramientas (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     foto BYTEA,
-    id_almacen INT REFERENCES Almacen(id)
+    id_almacen INT REFERENCES Almacen(id),
+    id_proveedor INT
+
+
 );
 
 INSERT INTO Herramientas (nombre, id_almacen)
@@ -178,7 +181,9 @@ CREATE TABLE IF NOT EXISTS Medicamento (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,     
     descripcion VARCHAR(500),
-    id_almacen INT REFERENCES Almacen(id)
+    id_almacen INT REFERENCES Almacen(id),
+    id_proveedor INT
+
 );
 
 INSERT INTO Medicamento (nombre, descripcion, id_almacen)

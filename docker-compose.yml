@@ -139,6 +139,24 @@ services:
       - apiario-network
 
 
+  # MicroServiceProduccion
+  microserviceproduccion:
+    image: microserviceproduccion:1.0
+    container_name: MicroServiceProduccion
+    depends_on:
+      - postgres
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ProduccionDB
+      SPRING_DATASOURCE_USERNAME: apiario
+      SPRING_DATASOURCE_PASSWORD: apiario123
+      MICROSERVICIO_ALMACEN: http://microservicealmacen:8081/api/almacenes
+      MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos
+    networks:
+      - apiario-network
+
+
 volumes:
   pgdata:
 
