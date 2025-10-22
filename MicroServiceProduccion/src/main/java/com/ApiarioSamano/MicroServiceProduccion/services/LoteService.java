@@ -30,67 +30,68 @@ public class LoteService {
 
     @Autowired
     private final AlmacenClientMicroservice almacenClientMicroservice;
-    
+
     @Autowired
     private final CodigoClientMicroservice codigoClientMicroservice;
 
     private static final Logger log = LoggerFactory.getLogger(LoteService.class);
 
+    public CodigoResponse<Lote> guardarLote(LoteRequest request) {
+        try {
+            log.info("Validando existencia del almacén con ID: {}", request.getIdAlmacen());
 
-  public CodigoResponse<Lote> guardarLote(LoteRequest request) {
-    try {
-        log.info("Validando existencia del almacén con ID: {}", request.getIdAlmacen());
+            // 🔹 Verificar que el almacén exista
+            var responseAlmacen = almacenClientMicroservice.obtenerAlmacenPorId(request.getIdAlmacen());
+            if (responseAlmacen == null || responseAlmacen.getCodigo() != 200 || responseAlmacen.getData() == null) {
+                log.warn("El almacén con ID {} no existe o no fue encontrado", request.getIdAlmacen());
+                return new CodigoResponse<>(404, "El almacén especificado no existe", null);
+            }
 
-        // 🔹 Verificar que el almacén exista llamando al microservicio
-        var responseAlmacen = almacenClientMicroservice.obtenerAlmacenPorId(request.getIdAlmacen());
-        if (responseAlmacen == null || responseAlmacen.getCodigo() != 200 || responseAlmacen.getData() == null) {
-            log.warn("El almacén con ID {} no existe o no fue encontrado", request.getIdAlmacen());
-            return new CodigoResponse<>(404, "El almacén especificado no existe", null);
+            // 🔹 Crear lote temporal con número de seguimiento temporal
+            Lote loteTemporal = new Lote();
+            loteTemporal.setNumeroSeguimiento("TEMP-" + System.currentTimeMillis()); // Temporal
+            loteTemporal.setTipoProducto(request.getTipoProducto());
+            loteTemporal.setFechaCreacion(LocalDate.now());
+            loteTemporal.setIdAlmacen(request.getIdAlmacen());
+
+            // 🔹 Guardar para obtener ID
+            Lote loteGuardado = loteRepository.save(loteTemporal);
+            log.info("Lote temporal guardado con ID: {}", loteGuardado.getId());
+
+            // 🔹 Generar código real con el ID
+            LoteRequestClient infLote = new LoteRequestClient();
+            infLote.setProducto(request.getTipoProducto());
+            infLote.setNumeroLote(loteGuardado.getId().intValue());
+
+            String codigoSeguimientoReal = codigoClientMicroservice.generarLote(infLote);
+
+            if (codigoSeguimientoReal == null || codigoSeguimientoReal.trim().isEmpty()) {
+                // Si falla, mantener el temporal
+                log.warn("No se pudo generar código real, manteniendo temporal");
+                return new CodigoResponse<>(200, "Lote guardado con código temporal", loteGuardado);
+            }
+
+            // 🔹 Actualizar con código real
+            loteGuardado.setNumeroSeguimiento(codigoSeguimientoReal);
+            Lote loteFinal = loteRepository.save(loteGuardado);
+
+            log.info("Lote actualizado con código real: {}", loteFinal.getNumeroSeguimiento());
+            return new CodigoResponse<>(200, "Lote guardado correctamente", loteFinal);
+
+        } catch (Exception e) {
+            log.error("Error al guardar el lote: {}", e.getMessage(), e);
+            return new CodigoResponse<>(500, "Error al guardar el lote: " + e.getMessage(), null);
         }
-        
-        // 🔹 Crear nuevo lote
-        Lote lote = new Lote();
-        lote.setNumeroSeguimiento(null);
-        lote.setTipoProducto(request.getTipoProducto());
-        lote.setFechaCreacion(LocalDate.now());
-        lote.setIdAlmacen(request.getIdAlmacen());
-
-        // 🔹 Guardar en base de datos
-        Lote guardado = loteRepository.save(lote);
-        log.info("Lote guardado correctamente con ID: {}", guardado.getId());
-
-        LoteRequestClient infLote = new LoteRequestClient() ;
-        infLote.setProducto(request.getTipoProducto());
-        infLote.setNumeroLote(guardado.getId().intValue());
-
-        String codigoSerguimiento = codigoClientMicroservice.generarLote(infLote);
-
-         // 🔹 Crear nuevo lote
-        Lote loteConCodigo = new Lote();
-        loteConCodigo.setNumeroSeguimiento(codigoSerguimiento);
-        loteConCodigo.setTipoProducto(guardado.getTipoProducto());
-        loteConCodigo.setFechaCreacion(LocalDate.now());
-        loteConCodigo.setIdAlmacen(guardado.getIdAlmacen());
-
-           // 🔹 Guardar en base de datos
-        Lote guardadoConCodigo = loteRepository.save(loteConCodigo);
-        log.info("Lote guardado correctamente con ID: {}", guardadoConCodigo.getId());
-        return new CodigoResponse<>(200, "Lote guardado correctamente", guardado);
-
-    } catch (Exception e) {
-        log.error("Error al guardar el lote: {}", e.getMessage(), e);
-        return new CodigoResponse<>(500, "Error al guardar el lote: " + e.getMessage(), null);
     }
-}
-
 
     public CodigoResponse<List<Lote>> listarLotes() {
         List<Lote> lista = loteRepository.findAll();
         return new CodigoResponse<>(200, "Listado de lotes obtenido correctamente", lista);
     }
 
-     /**
-     * 🔹 Obtiene un lote por su ID junto con la información del almacén desde otro microservicio.
+    /**
+     * 🔹 Obtiene un lote por su ID junto con la información del almacén desde otro
+     * microservicio.
      */
     public CodigoResponse<LoteConAlmacenResponse> obtenerLoteConAlmacenPorId(Long idLote) {
         try {
@@ -111,7 +112,8 @@ public class LoteService {
                 if (almacenResponseData.getCodigo() == 200) {
                     almacenResponse = almacenResponseData.getData();
                 } else {
-                    log.warn("El microservicio de almacén no devolvió datos válidos para el ID {}", lote.getIdAlmacen());
+                    log.warn("El microservicio de almacén no devolvió datos válidos para el ID {}",
+                            lote.getIdAlmacen());
                 }
             } catch (Exception e) {
                 log.error("Error al obtener información del almacén para el lote {}: {}", lote.getId(), e.getMessage());
@@ -123,8 +125,7 @@ public class LoteService {
                     lote.getTipoProducto(),
                     lote.getFechaCreacion(),
                     lote.getIdAlmacen(),
-                    almacenResponse
-            );
+                    almacenResponse);
 
             return new CodigoResponse<>(200, "Lote con almacén obtenido correctamente", respuesta);
 
@@ -133,7 +134,6 @@ public class LoteService {
             return new CodigoResponse<>(500, "Error al obtener el lote con su almacén", null);
         }
     }
-
 
     public CodigoResponse<Void> eliminarLote(Long id) {
         if (!loteRepository.existsById(id)) {

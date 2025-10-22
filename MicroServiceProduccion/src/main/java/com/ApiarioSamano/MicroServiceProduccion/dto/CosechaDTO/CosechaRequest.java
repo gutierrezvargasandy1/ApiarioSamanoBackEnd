@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class CosechaRequest {
     private Integer idLote;
     private String calidad;
+    private String tipoCosecha;
     private BigDecimal cantidad;
     private Integer idApiario;
 }

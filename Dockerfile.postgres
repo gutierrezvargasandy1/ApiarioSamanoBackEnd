@@ -126,6 +126,20 @@ VALUES
 ('2024-02-12', 5, 'Estándar', 85.60, 5),
 ('2024-02-20', 1, 'Extra', 180.25, 1),
 ('2024-02-25', 2, 'Premium', 220.40, 2);
+
+CREATE TABLE IF NOT EXISTS Productos (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    precio_mayoreo DECIMAL(12,2) NOT NULL,
+    precio_menudeo DECIMAL(12,2),
+    foto BYTEA,
+    codigo_barras VARCHAR(100) UNIQUE,
+    id_lote INT NOT NULL REFERENCES Lotes(id),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE
+);
+
 EOF
 
 RUN cat > /docker-entrypoint-initdb.d/05-almacen.sql <<'EOF'

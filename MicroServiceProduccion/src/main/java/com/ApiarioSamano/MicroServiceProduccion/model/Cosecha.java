@@ -25,6 +25,9 @@ public class Cosecha {
     @Column(length = 100)
     private String calidad;
 
+    @Column(name = "tipo_cosecha", length = 100)
+    private String tipoCosecha;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal cantidad;
 

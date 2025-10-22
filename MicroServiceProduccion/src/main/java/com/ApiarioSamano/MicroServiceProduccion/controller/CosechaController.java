@@ -5,8 +5,10 @@ import com.ApiarioSamano.MicroServiceProduccion.dto.CosechaDTO.CosechaRequest;
 import com.ApiarioSamano.MicroServiceProduccion.model.Cosecha;
 import com.ApiarioSamano.MicroServiceProduccion.services.CosechaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -16,27 +18,48 @@ public class CosechaController {
 
     private final CosechaService cosechaService;
 
-    // 🔹 Crear o actualizar una cosecha
     @PostMapping("/crear")
-    public CodigoResponse<Cosecha> guardarCosecha(@RequestBody CosechaRequest request) {
+    public CodigoResponse<Cosecha> crearCosecha(@RequestBody CosechaRequest request) {
         return cosechaService.guardarCosecha(request);
     }
 
-    // 🔹 Listar todas las cosechas
-    @GetMapping
+    @PutMapping("/{id}")
+    public CodigoResponse<Cosecha> actualizarCosecha(
+            @PathVariable Long id,
+            @RequestBody CosechaRequest request) {
+        return cosechaService.actualizarCosecha(id, request);
+    }
+
+    @GetMapping("/listar")
     public CodigoResponse<List<Cosecha>> listarCosechas() {
         return cosechaService.listarCosechas();
     }
 
-    // 🔹 Obtener una cosecha por ID
     @GetMapping("/{id}")
     public CodigoResponse<Cosecha> obtenerCosechaPorId(@PathVariable Long id) {
         return cosechaService.obtenerPorId(id);
     }
 
-    // 🔹 Eliminar una cosecha por ID
+    @GetMapping("/lote/{idLote}")
+    public CodigoResponse<List<Cosecha>> obtenerCosechasPorLote(@PathVariable Long idLote) {
+        return cosechaService.obtenerCosechasPorLote(idLote);
+    }
+
+    @GetMapping("/apiario/{idApiario}")
+    public CodigoResponse<List<Cosecha>> obtenerCosechasPorApiario(@PathVariable Long idApiario) {
+        return cosechaService.obtenerCosechasPorApiario(idApiario);
+    }
+
+    @GetMapping("/rango-fechas")
+    public CodigoResponse<List<Cosecha>> obtenerCosechasPorRangoFechas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        return cosechaService.obtenerCosechasPorRangoFechas(fechaInicio, fechaFin);
+    }
+
     @DeleteMapping("/{id}")
     public CodigoResponse<Void> eliminarCosecha(@PathVariable Long id) {
         return cosechaService.eliminarCosecha(id);
     }
+
 }
