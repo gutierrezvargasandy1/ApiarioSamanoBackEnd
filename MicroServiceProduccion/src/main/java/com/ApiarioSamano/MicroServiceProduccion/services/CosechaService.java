@@ -6,6 +6,7 @@ import com.ApiarioSamano.MicroServiceProduccion.model.Cosecha;
 import com.ApiarioSamano.MicroServiceProduccion.model.Lote;
 import com.ApiarioSamano.MicroServiceProduccion.repository.CosechaRepository;
 import com.ApiarioSamano.MicroServiceProduccion.repository.LoteRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -244,13 +245,10 @@ public class CosechaService {
 
     // ✅ Obtener todas las cosechas
     public CodigoResponse<List<Cosecha>> listarCosechas() {
-        try {
-            List<Cosecha> lista = cosechaRepository.findAll();
-            return new CodigoResponse<>(200, "Listado de cosechas obtenido correctamente", lista);
-        } catch (Exception e) {
-            log.error("Error al listar cosechas: {}", e.getMessage(), e);
-            return new CodigoResponse<>(500, "Error al obtener el listado de cosechas", null);
-        }
+
+        List<Cosecha> lista = cosechaRepository.findAll();
+        return new CodigoResponse<>(200, "Listado de cosechas obtenido correctamente", lista);
+
     }
 
     // ✅ Buscar por ID

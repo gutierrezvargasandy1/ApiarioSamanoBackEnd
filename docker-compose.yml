@@ -1,7 +1,20 @@
 version: "3.9"
 
 services:
-  # 🐘 Base de datos PostgreSQL
+  # Servicio Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - apiario-network
+
+  # Base de datos PostgreSQL
   postgres:
     image: microservice_postgres
     container_name: microservice_postgres
@@ -16,7 +29,7 @@ services:
     networks:
       - apiario-network
 
-  # ☕ MicroServiceAuth
+  # MicroServiceAuth
   microserviceauth:
     image: microserviceauth:1.0
     container_name: MicroServiceAuth
@@ -33,7 +46,7 @@ services:
     networks:
       - apiario-network
 
-  # 👤 MicroServiceUsuarios
+  # MicroServiceUsuarios
   microserviceusuarios:
     image: microserviceusuario:1.0
     container_name: MicroServiceUsuarios
@@ -50,7 +63,7 @@ services:
     networks:
       - apiario-network
 
-  # ✉️ MicroServiceNotificacionesGmail
+  # MicroServiceNotificacionesGmail
   microservicenotificaciones:
     image: microservicenotificacionesgmail:1.0
     container_name: MicroServiceNotificaciones
@@ -59,7 +72,7 @@ services:
     networks:
       - apiario-network
 
-  # 🔢 MicroServiceGeneradorCodigos
+  # MicroServiceGeneradorCodigos
   microservicegeneradorcodigos:
     image: microservicegeneradorcodigo:1.0
     container_name: MicroServiceGeneradorCodigos
@@ -68,7 +81,7 @@ services:
     networks:
       - apiario-network
 
-  # 📁 MicroServiceGestorDeArchivos
+  # MicroServiceGestorDeArchivos
   microservicegestordearchivos:
     image: microservicegestordearchivos:1.0
     container_name: MicroServiceGestorDeArchivos
@@ -84,7 +97,6 @@ services:
       APP_SERVER_URL: http://localhost:8089
     volumes:
       - ./archivos-app:/home/usuario/archivos-app
-        
     networks:
       - apiario-network
 
@@ -111,6 +123,7 @@ services:
     container_name: MicroServiceApiarios
     depends_on:
       - postgres
+      - ollama
     ports:
       - "8082:8082"
     environment:
@@ -118,6 +131,9 @@ services:
       SPRING_DATASOURCE_USERNAME: apiario
       SPRING_DATASOURCE_PASSWORD: apiario123
       MICROSERVICIO_ALMACEN: http://microservicealmacen:8081/api/medicamentos
+      OLLAMA_URL: http://ollama:11434 
+      OLLAMA_MODEL: gemma3:4b
+      TEMPERATURAAPI: https://api.open-meteo.com/v1/forecast?latitude=%.3f&longitude=%.3f&current_weather=true
     networks:
       - apiario-network
 
@@ -138,13 +154,13 @@ services:
     networks:
       - apiario-network
 
-
   # MicroServiceProduccion
   microserviceproduccion:
     image: microserviceproduccion:1.0
     container_name: MicroServiceProduccion
     depends_on:
       - postgres
+      - ollama  
     ports:
       - "8087:8087"
     environment:
@@ -153,12 +169,15 @@ services:
       SPRING_DATASOURCE_PASSWORD: apiario123
       MICROSERVICIO_ALMACEN: http://microservicealmacen:8081/api/almacenes
       MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos
+      OLLAMA_URL: http://ollama:11434 
+      OLLAMA_MODEL: gemma3:4b
     networks:
       - apiario-network
 
-
 volumes:
   pgdata:
+  ollama_data:  
 
 networks:
   apiario-network:
+    driver: bridge

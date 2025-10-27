@@ -2,7 +2,6 @@ package com.ApiarioSamano.MicroServiceApiarios.service;
 
 import com.ApiarioSamano.MicroServiceApiarios.dto.CodigoResponse;
 import com.ApiarioSamano.MicroServiceApiarios.dto.ApiariosDTO.ApiarioRequestDTO;
-import com.ApiarioSamano.MicroServiceApiarios.dto.HistorialResetasDTO.HistorialRecetasRequest;
 import com.ApiarioSamano.MicroServiceApiarios.dto.MedicamentosDTO.MedicamentosResponse;
 import com.ApiarioSamano.MicroServiceApiarios.dto.RecetaDTO.RecetaRequest;
 import com.ApiarioSamano.MicroServiceApiarios.model.*;
@@ -10,7 +9,6 @@ import com.ApiarioSamano.MicroServiceApiarios.repository.*;
 import com.ApiarioSamano.MicroServiceApiarios.service.MicroServicesAPI.MicroServiceClientMedicamentos;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 
 import org.slf4j.Logger;
@@ -22,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

@@ -1,7 +1,6 @@
 package com.ApiarioSamano.MicroServiceProduccion.dto.CosechaDTO;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,5 +39,6 @@ public class Cosecha {
     // Relación con Lote (muchas cosechas pueden pertenecer a un lote)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_lote", referencedColumnName = "id")
+    @JsonIgnore
     private Lote lote;
 }
