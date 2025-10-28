@@ -151,6 +151,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: apiario123
       MICROSERVICIO_CODIGOS_URL: http://microservicegeneradorcodigos:8084/api/codigos
       MICROSERVICIO_PROVEEDORES: http://microserviceproveedores:8086/api/proveedores
+      MICROSERVICIO_PRODUCCION: http://microserviceproduccion:8087
     networks:
       - apiario-network
 

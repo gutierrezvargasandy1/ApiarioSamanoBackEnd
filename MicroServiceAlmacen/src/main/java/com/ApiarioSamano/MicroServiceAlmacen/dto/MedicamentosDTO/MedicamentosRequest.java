@@ -1,5 +1,7 @@
 package com.ApiarioSamano.MicroServiceAlmacen.dto.MedicamentosDTO;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +13,7 @@ public class MedicamentosRequest {
     private String nombre;
     private String descripcion;
     private Integer idAlmacen;
-    private String cantidad;
+    private BigDecimal cantidad;
     private Integer idProveedor;
     private byte[] foto;
 }

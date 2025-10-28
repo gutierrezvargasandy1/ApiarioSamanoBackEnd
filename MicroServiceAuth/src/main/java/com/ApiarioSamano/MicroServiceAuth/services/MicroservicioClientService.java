@@ -30,7 +30,7 @@ public class MicroservicioClientService {
     private String urlEnvioCorreo;
 
     public String generarOtp() {
-        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true);
+        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true, "", "", "");
         log.info("JWT generado para OTP: {}", jwt);
 
         HttpHeaders headers = new HttpHeaders();
@@ -59,7 +59,7 @@ public class MicroservicioClientService {
     }
 
     public void enviarCorreo(String destinatario, String asunto, Map<String, Object> variables) {
-        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true);
+        String jwt = jwtService.generateToken("servicio", "servicio", 2L, true, "", "", "");
         log.info("JWT generado para envío de correo: {}", jwt);
 
         HttpHeaders headers = new HttpHeaders();

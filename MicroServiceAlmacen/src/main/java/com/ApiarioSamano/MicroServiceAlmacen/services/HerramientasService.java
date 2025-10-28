@@ -14,12 +14,13 @@ import com.ApiarioSamano.MicroServiceAlmacen.services.MicroServicesAPI.Proveedor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Slf4j // ✅ Añadido
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HerramientasService {
@@ -39,6 +40,7 @@ public class HerramientasService {
     }
 
     // ================== CRUD ==================
+    @Transactional
     public CodigoResponse<HerramientasResponse> guardar(HerramientasRequest req) {
         log.info("🔍 Iniciando proceso de guardar herramienta: {}", req.getNombre());
 
@@ -63,6 +65,17 @@ public class HerramientasService {
                 });
         log.info("✅ Almacén encontrado: ID {}, Ubicación: {}", almacen.getId(), almacen.getUbicacion());
 
+        // Verificar capacidad del almacén antes de agregar
+        int espaciosOcupados = calcularEspaciosOcupados(almacen);
+        log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
+
+        if (espaciosOcupados >= almacen.getCapacidad()) {
+            log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
+                    almacen.getCapacidad(), espaciosOcupados);
+            return new CodigoResponse<>(400, "No hay capacidad disponible en el almacén", null);
+        }
+
+        // Crear y guardar la herramienta
         Herramientas herramienta = new Herramientas();
         herramienta.setNombre(req.getNombre());
         herramienta.setFoto(req.getFoto());
@@ -73,7 +86,37 @@ public class HerramientasService {
         Herramientas guardada = herramientasRepository.save(herramienta);
         log.info("✅ Herramienta guardada exitosamente con ID: {}", guardada.getId());
 
+        // Actualizar la lista de herramientas del almacén
+        if (almacen.getHerramientas() == null) {
+            almacen.setHerramientas(new java.util.ArrayList<>());
+        }
+        almacen.getHerramientas().add(guardada);
+        almacenRepository.save(almacen);
+        log.info("✅ Herramienta agregada al almacén. Nuevos espacios ocupados: {}", calcularEspaciosOcupados(almacen));
+
         return new CodigoResponse<>(200, "Herramienta guardada correctamente", mapHerramienta(guardada));
+    }
+
+    // Método auxiliar para calcular espacios ocupados
+    private int calcularEspaciosOcupados(Almacen almacen) {
+        int espacios = 0;
+
+        // Contar herramientas
+        if (almacen.getHerramientas() != null) {
+            espacios += almacen.getHerramientas().size();
+        }
+
+        // Contar materias primas (si existen en tu modelo)
+        if (almacen.getMateriasPrimas() != null) {
+            espacios += almacen.getMateriasPrimas().size();
+        }
+
+        // Contar medicamentos (si existen en tu modelo)
+        if (almacen.getMedicamentos() != null) {
+            espacios += almacen.getMedicamentos().size();
+        }
+
+        return espacios;
     }
 
     public CodigoResponse<List<HerramientasResponse>> obtenerTodas() {
@@ -99,11 +142,27 @@ public class HerramientasService {
         }
     }
 
+    @Transactional
     public CodigoResponse<Void> eliminar(Long id) {
         log.info("🗑️ Intentando eliminar herramienta con ID: {}", id);
-        if (herramientasRepository.existsById(id)) {
+        Optional<Herramientas> optHerramienta = herramientasRepository.findById(id);
+
+        if (optHerramienta.isPresent()) {
+            Herramientas herramienta = optHerramienta.get();
+            Almacen almacen = herramienta.getAlmacen();
+
+            // Eliminar la herramienta
             herramientasRepository.deleteById(id);
             log.info("✅ Herramienta con ID {} eliminada correctamente", id);
+
+            // Actualizar el almacén removiendo la herramienta
+            if (almacen != null && almacen.getHerramientas() != null) {
+                almacen.getHerramientas().removeIf(h -> h.getId().equals(id));
+                almacenRepository.save(almacen);
+                log.info("✅ Herramienta removida del almacén. Nuevos espacios ocupados: {}",
+                        calcularEspaciosOcupados(almacen));
+            }
+
             return new CodigoResponse<>(200, "Herramienta eliminada correctamente", null);
         }
         log.warn("⚠️ No se puede eliminar, herramienta con ID {} no encontrada", id);

@@ -34,7 +34,10 @@ public class AuthService {
                                 usuario.getEmail(),
                                 usuario.getRol(),
                                 usuario.getId(),
-                                usuario.isEstado());
+                                usuario.isEstado(),
+                                usuario.getNombre(),
+                                usuario.getApellidoMa(),
+                                usuario.getApellidoPa());
 
                 return AuthResponse.builder()
                                 .token(token)

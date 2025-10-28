@@ -86,6 +86,8 @@ docker system prune -a --volumes -f
 
 docker build -t microservice_postgres -f Dockerfile.postgres .
 
+docker exec -it ollama ollama pull gemma3:4b
+
 
 curl.exe -X POST `
   -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhbmRyb296NzA2QGdtYWlsLmNvbSIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ1c3VhcmlvSWQiOjEsImVzdGFkbyI6ZmFsc2UsImlhdCI6MTc2MDY0MjQzOCwiZXhwIjoxNzYwNzI4ODM4fQ.0Gs3umr0chCCO90M4pCTwjfNDENitpBZrtY4xlMfpmePtUqZ5Uj2Q2PjmrG5sdfc" `
