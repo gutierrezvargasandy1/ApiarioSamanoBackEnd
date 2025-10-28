@@ -33,4 +33,7 @@ public class Almacen {
 
     @OneToMany(mappedBy = "almacen", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Medicamento> medicamentos;
+
+    
+
 }
