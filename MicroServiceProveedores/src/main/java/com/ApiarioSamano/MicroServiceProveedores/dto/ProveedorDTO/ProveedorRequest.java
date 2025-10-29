@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProveedorRequest {
-    private byte[] fotografia;
+    private String fotografia;
     private String nombreEmpresa;
     private String nombreReprecentante;
     private String numTelefono;

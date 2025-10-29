@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class HerramientasResponse {
     private Long id;
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private Integer idProveedor;
 }

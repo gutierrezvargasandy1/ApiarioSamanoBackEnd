@@ -10,8 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MateriasPrimasRequest {
+    private Long id;
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private BigDecimal cantidad;
     private Long idAlmacen;
     private Integer idProvedor;

@@ -11,9 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MedicamentosRequest {
     private String nombre;
+    private Long id;
     private String descripcion;
     private Integer idAlmacen;
     private BigDecimal cantidad;
     private Integer idProveedor;
-    private byte[] foto;
+    private String foto;
 }

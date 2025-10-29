@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class MateriasPrimasResponse {
     private Long id;
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private BigDecimal cantidad;
     private Integer idProveedor;
 }

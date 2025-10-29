@@ -1,5 +1,6 @@
 package com.ApiarioSamano.MicroServiceAlmacen.services;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,7 +34,14 @@ public class MedicamentosService {
     // 📌 Crear o actualizar medicamento
     @Transactional
     public MedicamentosResponse guardar(MedicamentosRequest request) {
-        log.info("🔍 Iniciando proceso de guardar medicamento: {}", request.getNombre());
+        // Determinar si es creación o actualización
+        boolean esActualizacion = request.getId() != null;
+
+        if (esActualizacion) {
+            log.info("🔄 Iniciando proceso de ACTUALIZAR medicamento ID: {}", request.getId());
+        } else {
+            log.info("🆕 Iniciando proceso de CREAR medicamento: {}", request.getNombre());
+        }
 
         log.info("🔍 Consultando microservicio de proveedores...");
         List<ProveedorResponseDTO> proveedores = proveedorClient.obtenerTodosProveedores();
@@ -56,36 +64,81 @@ public class MedicamentosService {
                 });
         log.info("✅ Almacén encontrado: ID {}, Ubicación: {}", almacen.getId(), almacen.getUbicacion());
 
-        // Verificar capacidad del almacén antes de agregar
-        int espaciosOcupados = calcularEspaciosOcupados(almacen);
-        log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
+        // Verificar capacidad del almacén solo para creación
+        if (!esActualizacion) {
+            int espaciosOcupados = calcularEspaciosOcupados(almacen);
+            log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
 
-        if (espaciosOcupados >= almacen.getCapacidad()) {
-            log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
-                    almacen.getCapacidad(), espaciosOcupados);
-            throw new RuntimeException("No hay capacidad disponible en el almacén");
+            if (espaciosOcupados >= almacen.getCapacidad()) {
+                log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
+                        almacen.getCapacidad(), espaciosOcupados);
+                throw new RuntimeException("No hay capacidad disponible en el almacén");
+            }
         }
 
-        // Crear y guardar el medicamento
-        Medicamento medicamento = new Medicamento();
+        Medicamento medicamento;
+
+        if (esActualizacion) {
+            // Buscar medicamento existente para actualizar
+            medicamento = medicamentosRepository.findById(request.getId())
+                    .orElseThrow(() -> {
+                        log.error("❌ Medicamento con ID {} no encontrado para actualizar", request.getId());
+                        return new RuntimeException("Medicamento no encontrado con ID: " + request.getId());
+                    });
+            log.info("✅ Medicamento existente encontrado para actualizar");
+        } else {
+            // Crear nuevo medicamento
+            medicamento = new Medicamento();
+            log.info("✅ Nuevo medicamento creado");
+        }
+
+        // Actualizar campos del medicamento (tanto para creación como actualización)
         medicamento.setNombre(request.getNombre());
         medicamento.setDescripcion(request.getDescripcion());
         medicamento.setCantidad(request.getCantidad());
-        medicamento.setFoto(request.getFoto());
+
+        // Convertir Base64 String a byte[]
+        if (request.getFoto() != null && !request.getFoto().isEmpty()) {
+            try {
+                String base64Data = request.getFoto();
+
+                // Limpiar el string Base64 - remover el prefijo "data:image/...;base64,"
+                if (base64Data.contains(",")) {
+                    base64Data = base64Data.split(",")[1];
+                    log.info("✅ Prefijo Base64 removido, datos limpios obtenidos");
+                }
+
+                byte[] fotoBytes = Base64.getDecoder().decode(base64Data);
+                medicamento.setFoto(fotoBytes);
+                log.info("✅ Foto procesada, tamaño: {} bytes", fotoBytes.length);
+            } catch (IllegalArgumentException e) {
+                log.error("❌ Error al decodificar Base64 de la foto: {}", e.getMessage());
+                throw new RuntimeException("Formato Base64 de la foto inválido: " + e.getMessage());
+            }
+        } else {
+            medicamento.setFoto(null);
+            log.info("ℹ️ No se proporcionó foto para el medicamento");
+        }
+
         medicamento.setAlmacen(almacen);
         medicamento.setIdProveedor(request.getIdProveedor());
 
-        log.info("💾 Guardando medicamento en base de datos...");
+        log.info("💾 {} medicamento en base de datos...", esActualizacion ? "Actualizando" : "Guardando");
         Medicamento guardado = medicamentosRepository.save(medicamento);
-        log.info("✅ Medicamento guardado exitosamente con ID: {}", guardado.getId());
+        log.info("✅ Medicamento {} exitosamente con ID: {}",
+                esActualizacion ? "ACTUALIZADO" : "CREADO",
+                guardado.getId());
 
-        // Actualizar la lista de medicamentos del almacén
-        if (almacen.getMedicamentos() == null) {
-            almacen.setMedicamentos(new java.util.ArrayList<>());
+        // Actualizar la lista de medicamentos del almacén solo para creación
+        if (!esActualizacion) {
+            if (almacen.getMedicamentos() == null) {
+                almacen.setMedicamentos(new java.util.ArrayList<>());
+            }
+            almacen.getMedicamentos().add(guardado);
+            almacenRepository.save(almacen);
+            log.info("✅ Medicamento agregado al almacén. Nuevos espacios ocupados: {}",
+                    calcularEspaciosOcupados(almacen));
         }
-        almacen.getMedicamentos().add(guardado);
-        almacenRepository.save(almacen);
-        log.info("✅ Medicamento agregado al almacén. Nuevos espacios ocupados: {}", calcularEspaciosOcupados(almacen));
 
         return mapToResponse(guardado);
     }
@@ -240,7 +293,15 @@ public class MedicamentosService {
         response.setNombre(m.getNombre());
         response.setDescripcion(m.getDescripcion());
         response.setCantidad(m.getCantidad());
-        response.setFoto(m.getFoto());
+
+        // Convertir byte[] a Base64 String
+        if (m.getFoto() != null && m.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(m.getFoto());
+            response.setFoto(fotoBase64);
+        } else {
+            response.setFoto(null);
+        }
+
         response.setIdProveedor(m.getIdProveedor());
         return response;
     }
@@ -251,7 +312,14 @@ public class MedicamentosService {
         response.setNombre(m.getNombre());
         response.setDescripcion(m.getDescripcion());
         response.setCantidad(m.getCantidad());
-        response.setFoto(m.getFoto());
+
+        // Convertir byte[] a Base64 String
+        if (m.getFoto() != null && m.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(m.getFoto());
+            response.setFoto(fotoBase64);
+        } else {
+            response.setFoto(null);
+        }
 
         try {
             // Obtener todos los proveedores desde el microservicio

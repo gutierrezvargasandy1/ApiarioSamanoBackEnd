@@ -16,6 +16,6 @@ public class MedicamnetosConProveedorResponse {
     private String nombre;
     private BigDecimal cantidad;
     private String descripcion;
-    private byte[] foto;
+    private String foto;
     private ProveedorResponseDTO proveedor;
 }

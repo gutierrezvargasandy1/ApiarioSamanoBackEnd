@@ -10,7 +10,7 @@ cd /d "C:\Users\andre\OneDrive\Escritorio\ApiarioSamanoBackEnd"
 :: =============================
 :: Lista de microservicios CON NOMBRES DE IMAGEN EN MINÚSCULAS
 :: =============================
-set servicios= MicroServiceAlmacen:microservicealmacen MicroServiceAuth:microserviceauth MicroServiceProduccion:microserviceproduccion MicroServiceApiarios:microserviceapiarios MicroServiceProveedores:microserviceproveedores MicroServiceGestorDeArchivos:microservicegestordearchivos  MicroServiceUsuario:microserviceusuario MicroServiceNotificacionesGmail:microservicenotificacionesgmail MicroServiceGeneradorCodigo:microservicegeneradorcodigo
+set servicios= MicroServiceAlmacen:microservicealmacen MicroServiceProveedores:microserviceproveedores MicroServiceAuth:microserviceauth MicroServiceProduccion:microserviceproduccion MicroServiceApiarios:microserviceapiarios MicroServiceGestorDeArchivos:microservicegestordearchivos  MicroServiceUsuario:microserviceusuario MicroServiceNotificacionesGmail:microservicenotificacionesgmail MicroServiceGeneradorCodigo:microservicegeneradorcodigo
 
 set reintentos=3
 

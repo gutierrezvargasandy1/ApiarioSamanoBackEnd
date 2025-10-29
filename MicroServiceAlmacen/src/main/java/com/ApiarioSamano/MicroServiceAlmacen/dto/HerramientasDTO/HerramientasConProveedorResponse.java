@@ -12,6 +12,6 @@ import com.ApiarioSamano.MicroServiceAlmacen.dto.ProveedoresClientMicroserviceDT
 public class HerramientasConProveedorResponse {
     private Long id;
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private ProveedorResponseDTO proveedor;
 }

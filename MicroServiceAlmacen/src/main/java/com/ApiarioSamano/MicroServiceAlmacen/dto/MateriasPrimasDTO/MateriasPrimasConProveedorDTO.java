@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 public class MateriasPrimasConProveedorDTO {
     private Long id;
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private BigDecimal cantidad;
     private AlmacenResponse almacen;
     private ProveedorResponseDTO proveedor;

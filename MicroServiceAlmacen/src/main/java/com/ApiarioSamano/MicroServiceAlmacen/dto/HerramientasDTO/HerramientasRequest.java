@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class HerramientasRequest {
     private String nombre;
-    private byte[] foto;
+    private String foto;
     private Integer idAlmacen;
     private Integer idProveedor;
 }

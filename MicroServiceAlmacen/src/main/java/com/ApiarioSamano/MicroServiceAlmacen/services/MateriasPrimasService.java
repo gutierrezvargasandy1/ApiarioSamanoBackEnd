@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,74 +44,96 @@ public class MateriasPrimasService {
         return response;
     }
 
+    /**
+     * Convierte byte[] a String Base64 para la respuesta
+     */
     private MateriasPrimasResponse mapMateria(MateriasPrimas m) {
         MateriasPrimasResponse response = new MateriasPrimasResponse();
         response.setId(m.getId());
         response.setNombre(m.getNombre());
-        response.setFoto(m.getFoto());
+
+        // Convertir byte[] a String Base64
+        if (m.getFoto() != null && m.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(m.getFoto());
+            response.setFoto(fotoBase64);
+        } else {
+            response.setFoto(null);
+        }
+
         response.setCantidad(m.getCantidad());
         response.setIdProveedor(m.getIdProveedor());
 
         return response;
     }
 
+    /**
+     * Convierte String Base64 a byte[] para guardar en BD
+     */
+    private byte[] convertBase64ToBytes(String base64String) {
+        if (base64String == null || base64String.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Si viene con prefijo data:image/...;base64, lo removemos
+            if (base64String.contains(",")) {
+                base64String = base64String.split(",")[1];
+            }
+
+            return Base64.getDecoder().decode(base64String);
+        } catch (IllegalArgumentException e) {
+            log.error("❌ Error al decodificar Base64: {}", e.getMessage());
+            throw new RuntimeException("Formato Base64 inválido");
+        }
+    }
+
     @Transactional
     public CodigoResponse<MateriasPrimasResponse> guardar(MateriasPrimasRequest req) {
-        log.info("🔍 Iniciando proceso de guardar materia prima: {}", req.getNombre());
+        log.info("🔍 Guardando materia prima: {}", req.getNombre());
 
-        log.info("🔍 Consultando microservicio de proveedores...");
+        // ✅ Si trae ID → actualizar
+        MateriasPrimas materia;
+        if (req.getId() != null) {
+            log.info("✏️ Modo actualización ID: {}", req.getId());
+
+            materia = materiasPrimasRepository.findById(req.getId())
+                    .orElseThrow(() -> new RuntimeException("Materia prima no encontrada"));
+
+        } else {
+            log.info("🆕 Modo creación");
+            materia = new MateriasPrimas();
+        }
+
+        // Validar proveedor
         List<ProveedorResponseDTO> proveedores = proveedoresClient.obtenerTodosProveedores();
-        log.info("✅ Proveedores obtenidos: {} registros", proveedores.size());
-
         boolean existeProveedor = proveedores.stream()
                 .anyMatch(p -> p.getId().equals(req.getIdProvedor().longValue()));
 
         if (!existeProveedor) {
-            log.warn("⚠️ Proveedor con ID {} no encontrado", req.getIdProvedor());
             return new CodigoResponse<>(404, "Proveedor no encontrado", null);
         }
-        log.info("✅ Proveedor ID {} validado correctamente", req.getIdProvedor());
 
-        log.info("🔍 Buscando almacén con ID: {}", req.getIdAlmacen());
+        // Buscar almacén
         Almacen almacen = almacenRepository.findById(req.getIdAlmacen())
-                .orElseThrow(() -> {
-                    log.error("❌ Almacén con ID {} no encontrado", req.getIdAlmacen());
-                    return new RuntimeException("Almacén no encontrado con ID: " + req.getIdAlmacen());
-                });
-        log.info("✅ Almacén encontrado: ID {}, Ubicación: {}", almacen.getId(), almacen.getUbicacion());
+                .orElseThrow(() -> new RuntimeException("Almacén no encontrado"));
 
-        // Verificar capacidad del almacén antes de agregar
-        int espaciosOcupados = calcularEspaciosOcupados(almacen);
-        log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
-
-        if (espaciosOcupados >= almacen.getCapacidad()) {
-            log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
-                    almacen.getCapacidad(), espaciosOcupados);
-            return new CodigoResponse<>(400, "No hay capacidad disponible en el almacén", null);
-        }
-
-        // Crear y guardar la materia prima
-        MateriasPrimas materia = new MateriasPrimas();
         materia.setNombre(req.getNombre());
-        materia.setFoto(req.getFoto());
         materia.setCantidad(req.getCantidad());
         materia.setAlmacen(almacen);
         materia.setIdProveedor(req.getIdProvedor());
 
-        log.info("💾 Guardando materia prima en base de datos...");
-        MateriasPrimas guardada = materiasPrimasRepository.save(materia);
-        log.info("✅ Materia prima guardada exitosamente con ID: {}", guardada.getId());
-
-        // Actualizar la lista de materias primas del almacén
-        if (almacen.getMateriasPrimas() == null) {
-            almacen.setMateriasPrimas(new java.util.ArrayList<>());
+        // Foto base64 a byte[]
+        if (req.getFoto() != null && !req.getFoto().isBlank()) {
+            materia.setFoto(convertBase64ToBytes(req.getFoto()));
         }
-        almacen.getMateriasPrimas().add(guardada);
-        almacenRepository.save(almacen);
-        log.info("✅ Materia prima agregada al almacén. Nuevos espacios ocupados: {}",
-                calcularEspaciosOcupados(almacen));
 
-        return new CodigoResponse<>(200, "Materia prima guardada correctamente", mapMateria(guardada));
+        log.info("💾 Guardando en BD...");
+        MateriasPrimas guardada = materiasPrimasRepository.save(materia);
+
+        return new CodigoResponse<>(
+                200,
+                "✅ Materia prima " + (req.getId() != null ? "actualizada" : "creada") + " correctamente",
+                mapMateria(guardada));
     }
 
     // Método auxiliar para calcular espacios ocupados
@@ -200,7 +223,15 @@ public class MateriasPrimasService {
             MateriasPrimasConProveedorDTO dto = new MateriasPrimasConProveedorDTO();
             dto.setId(m.getId());
             dto.setNombre(m.getNombre());
-            dto.setFoto(m.getFoto());
+
+            // Convertir byte[] a String Base64
+            if (m.getFoto() != null && m.getFoto().length > 0) {
+                String fotoBase64 = Base64.getEncoder().encodeToString(m.getFoto());
+                dto.setFoto(fotoBase64);
+            } else {
+                dto.setFoto(null);
+            }
+
             dto.setCantidad(m.getCantidad());
             dto.setAlmacen(mapAlmacen(m.getAlmacen()));
 
@@ -234,7 +265,15 @@ public class MateriasPrimasService {
         MateriasPrimasConProveedorDTO dto = new MateriasPrimasConProveedorDTO();
         dto.setId(materia.getId());
         dto.setNombre(materia.getNombre());
-        dto.setFoto(materia.getFoto());
+
+        // Convertir byte[] a String Base64
+        if (materia.getFoto() != null && materia.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(materia.getFoto());
+            dto.setFoto(fotoBase64);
+        } else {
+            dto.setFoto(null);
+        }
+
         dto.setCantidad(materia.getCantidad());
         dto.setAlmacen(mapAlmacen(materia.getAlmacen()));
 
@@ -281,4 +320,5 @@ public class MateriasPrimasService {
         log.info("✅ Se encontraron {} materias primas del proveedor {}", lista.size(), idProveedor);
         return new CodigoResponse<>(200, "Materias primas del proveedor obtenidas", lista);
     }
+
 }

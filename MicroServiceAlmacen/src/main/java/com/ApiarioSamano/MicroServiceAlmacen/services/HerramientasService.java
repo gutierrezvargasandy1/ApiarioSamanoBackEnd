@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,7 +35,15 @@ public class HerramientasService {
         HerramientasResponse response = new HerramientasResponse();
         response.setId(h.getId());
         response.setNombre(h.getNombre());
-        response.setFoto(h.getFoto());
+
+        // Convertir byte[] a Base64 String
+        if (h.getFoto() != null && h.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(h.getFoto());
+            response.setFoto(fotoBase64);
+        } else {
+            response.setFoto(null);
+        }
+
         response.setIdProveedor(h.getIdProveedor());
         return response;
     }
@@ -78,7 +87,22 @@ public class HerramientasService {
         // Crear y guardar la herramienta
         Herramientas herramienta = new Herramientas();
         herramienta.setNombre(req.getNombre());
-        herramienta.setFoto(req.getFoto());
+
+        // Convertir Base64 String a byte[]
+        if (req.getFoto() != null && !req.getFoto().isEmpty()) {
+            try {
+                byte[] fotoBytes = Base64.getDecoder().decode(req.getFoto());
+                herramienta.setFoto(fotoBytes);
+                log.info("✅ Foto convertida de Base64 a byte[], tamaño: {} bytes", fotoBytes.length);
+            } catch (IllegalArgumentException e) {
+                log.error("❌ Error al decodificar Base64 de la foto: {}", e.getMessage());
+                return new CodigoResponse<>(400, "Formato Base64 de la foto inválido", null);
+            }
+        } else {
+            herramienta.setFoto(null);
+            log.info("ℹ️ No se proporcionó foto para la herramienta");
+        }
+
         herramienta.setAlmacen(almacen);
         herramienta.setIdProveedor(req.getIdProveedor());
 
@@ -184,7 +208,14 @@ public class HerramientasService {
             HerramientasConProveedorResponse dto = new HerramientasConProveedorResponse();
             dto.setId(h.getId());
             dto.setNombre(h.getNombre());
-            dto.setFoto(h.getFoto());
+
+            // Convertir byte[] a Base64 String
+            if (h.getFoto() != null && h.getFoto().length > 0) {
+                String fotoBase64 = Base64.getEncoder().encodeToString(h.getFoto());
+                dto.setFoto(fotoBase64);
+            } else {
+                dto.setFoto(null);
+            }
 
             proveedores.stream()
                     .filter(p -> p.getId().equals(h.getIdProveedor().longValue()))
@@ -216,7 +247,14 @@ public class HerramientasService {
         HerramientasConProveedorResponse dto = new HerramientasConProveedorResponse();
         dto.setId(herramienta.getId());
         dto.setNombre(herramienta.getNombre());
-        dto.setFoto(herramienta.getFoto());
+
+        // Convertir byte[] a Base64 String
+        if (herramienta.getFoto() != null && herramienta.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(herramienta.getFoto());
+            dto.setFoto(fotoBase64);
+        } else {
+            dto.setFoto(null);
+        }
 
         proveedores.stream()
                 .filter(p -> p.getId().equals(herramienta.getIdProveedor().longValue()))
