@@ -166,7 +166,7 @@ public class OllamaService {
         return generateAnalysis(
                 "Responde de manera técnica pero clara en español. Sé conciso (máximo 100 palabras).",
                 prompt,
-                20);
+                60);
     }
 
     public Map<String, Object> getOllamaStatus() {

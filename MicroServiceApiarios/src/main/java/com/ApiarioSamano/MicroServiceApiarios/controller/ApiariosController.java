@@ -8,6 +8,8 @@ import com.ApiarioSamano.MicroServiceApiarios.model.Apiarios;
 import com.ApiarioSamano.MicroServiceApiarios.service.ApiariosService;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -45,15 +47,30 @@ public class ApiariosController {
     }
 
     // 🔹 Eliminar receta cumplida
-    @DeleteMapping("/{idApiario}/recetas")
-    public CodigoResponse eliminarRecetaCumplida(@PathVariable Long idApiario) {
-        return apiariosService.eliminarRecetaCumplida(idApiario);
+    @DeleteMapping("/{idApiario}/receta")
+    public ResponseEntity<CodigoResponse> eliminarRecetaCumplida(@PathVariable Long idApiario) {
+        try {
+            CodigoResponse response = apiariosService.eliminarRecetaCumplida(idApiario);
+            return ResponseEntity.status(response.getCodigo()).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CodigoResponse(500, "Error interno del servidor", null));
+        }
     }
 
     // 🔍 Obtener todos los apiarios
     @GetMapping
     public CodigoResponse<List<Apiarios>> obtenerTodos() {
         return apiariosService.obtenerTodos();
+    }
+
+    @GetMapping("/{idApiario}/historial-completo")
+    public ResponseEntity<CodigoResponse> obtenerHistorialCompleto(@PathVariable Long idApiario) {
+        try {
+            CodigoResponse response = apiariosService.obtenerHistorialCompletoApiario(idApiario);
+            return ResponseEntity.status(response.getCodigo()).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CodigoResponse(500, "Error interno del servidor", null));
+        }
     }
 
     // 🔍 Obtener apiario por ID

@@ -204,22 +204,141 @@ public class ApiariosService {
     }
 
     // 🧹 Eliminar receta cumplida del apiario
+    // 🧹 Marcar receta como cumplida y guardar en historial médico
+    // 🧹 Marcar receta como cumplida y guardar en historial médico
     public CodigoResponse eliminarRecetaCumplida(Long idApiario) {
-        Apiarios apiario = apiariosRepository.findById(idApiario)
-                .orElseThrow(() -> new RuntimeException("Apiario no encontrado con ID: " + idApiario));
+        try {
+            log.info("🔄 Marcando receta como cumplida para apiario ID: {}", idApiario);
 
-        Receta receta = apiario.getReceta();
-        if (receta == null) {
-            throw new RuntimeException("El apiario no tiene receta asignada.");
+            Apiarios apiario = apiariosRepository.findById(idApiario)
+                    .orElseThrow(() -> new RuntimeException("Apiario no encontrado con ID: " + idApiario));
+
+            Receta receta = apiario.getReceta();
+            if (receta == null) {
+                log.warn("⚠️ Apiario {} no tiene receta asignada", idApiario);
+                return new CodigoResponse<>(400, "El apiario no tiene receta asignada.", null);
+            }
+
+            log.info("📋 Receta encontrada ID: {}, procediendo a marcar como cumplida", receta.getId());
+
+            // ✅ OBTENER EL HISTORIAL MÉDICO DEL APIARIO
+            HistorialMedico historial = apiario.getHistorialMedico();
+            if (historial == null) {
+                log.info("📝 Creando nuevo historial médico para el apiario");
+                historial = new HistorialMedico();
+                historial.setNotas(""); // Iniciar con notas vacías
+                historial = historialMedicoRepository.save(historial);
+                apiario.setHistorialMedico(historial);
+                apiariosRepository.save(apiario);
+            }
+
+            // ✅ CREAR NUEVA NOTA PARA LA RECETA CUMPLIDA (REEMPLAZANDO EL HISTORIAL
+            // INICIAL)
+            String nuevaNota = String.format(
+                    "✅ Receta cumplida - %s: Aplicada correctamente (Medicamentos: %d) - Fecha: %s",
+                    receta.getDescripcion(),
+                    receta.getMedicamentos() != null ? receta.getMedicamentos().size() : 0,
+                    java.time.LocalDateTime.now()
+                            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+
+            // ✅ REEMPLAZAR COMPLETAMENTE LAS NOTAS ANTERIORES
+            // Si el historial tenía "Historial inicial del apiario", lo reemplazamos
+            String notasActuales = historial.getNotas();
+
+            if (notasActuales == null || notasActuales.trim().isEmpty() ||
+                    notasActuales.contains("Historial inicial del apiario")) {
+                // ✅ REEMPLAZAR COMPLETAMENTE con la nueva receta cumplida
+                historial.setNotas(nuevaNota);
+            } else {
+                // ✅ Si ya tiene otras recetas cumplidas, agregar la nueva al final
+                historial.setNotas(notasActuales + "\n" + nuevaNota);
+            }
+
+            historialMedicoRepository.save(historial);
+            log.info("Historial médico actualizado con receta cumplida (reemplazado historial inicial)");
+
+            // ✅ CREAR REGISTRO EN HISTORIALRECETAS PARA RELACIONAR LA RECETA CUMPLIDA
+            HistorialRecetas historialReceta = new HistorialRecetas();
+            historialReceta.setHistorialMedico(historial);
+            historialReceta.setReceta(receta);
+            historialRecetasRepository.save(historialReceta);
+            log.info("📋 Receta agregada al historial de recetas cumplidas");
+
+            // ✅ DESVINCULAR RECETA DEL APIARIO (PERO NO ELIMINARLA)
+            apiario.setReceta(null);
+            apiariosRepository.save(apiario);
+            log.info("🔗 Receta desvinculada del apiario");
+
+            // ✅ ACTUALIZAR DESCRIPCIÓN DE LA RECETA PARA INDICAR QUE FUE CUMPLIDA
+            String descripcionOriginal = receta.getDescripcion();
+            // Remover "CUMPLIDA - " si ya estaba presente para evitar duplicados
+            if (descripcionOriginal.startsWith("CUMPLIDA - ")) {
+                descripcionOriginal = descripcionOriginal.substring("CUMPLIDA - ".length());
+            }
+            receta.setDescripcion("CUMPLIDA - " + descripcionOriginal + " - Finalizada: " +
+                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            recetaRepository.save(receta);
+            log.info(" Receta marcada como cumplida en su descripción");
+
+            return new CodigoResponse<>(200,
+                    "Receta marcada como cumplida y agregada al historial médico correctamente",
+                    apiario);
+
+        } catch (Exception e) {
+            log.error("❌ Error al marcar receta como cumplida: {}", e.getMessage(), e);
+            return new CodigoResponse<>(500, "Error interno al procesar receta cumplida: " + e.getMessage(), null);
         }
+    }
 
-        // Eliminar de historial y BD
-        historialRecetasRepository.deleteByReceta(receta);
-        apiario.setReceta(null);
-        apiariosRepository.save(apiario);
-        recetaRepository.delete(receta);
+    // 🔍 Obtener historial médico completo del apiario con recetas cumplidas
+    public CodigoResponse obtenerHistorialCompletoApiario(Long idApiario) {
+        try {
+            Apiarios apiario = apiariosRepository.findById(idApiario)
+                    .orElseThrow(() -> new RuntimeException("Apiario no encontrado con ID: " + idApiario));
 
-        return new CodigoResponse<>(200, "Receta eliminada correctamente del apiario", apiario);
+            HistorialMedico historial = apiario.getHistorialMedico();
+            if (historial == null) {
+                return new CodigoResponse<>(404, "El apiario no tiene historial médico", null);
+            }
+
+            // Obtener todas las recetas del historial (recetas cumplidas)
+            List<HistorialRecetas> historialRecetas = historialRecetasRepository.findByHistorialMedico(historial);
+
+            // Cargar información completa de cada receta cumplida
+            List<Receta> recetasCumplidas = new ArrayList<>();
+            for (HistorialRecetas hr : historialRecetas) {
+                Receta receta = hr.getReceta();
+
+                // Cargar información de medicamentos para cada receta
+                if (receta.getMedicamentos() != null) {
+                    for (RecetaMedicamento rm : receta.getMedicamentos()) {
+                        try {
+                            MedicamentosResponse medicamentoInfo = microServiceClientMedicamentos
+                                    .obtenerPorId(rm.getIdMedicamento());
+                            rm.setMedicamentoInfo(medicamentoInfo);
+                        } catch (Exception e) {
+                            log.warn("No se pudo cargar información del medicamento ID: {}", rm.getIdMedicamento());
+                            rm.setMedicamentoInfo(null);
+                        }
+                    }
+                }
+                recetasCumplidas.add(receta);
+            }
+
+            // Crear respuesta estructurada
+            Map<String, Object> respuesta = new HashMap<>();
+            respuesta.put("apiario", apiario);
+            respuesta.put("historialMedico", historial);
+            respuesta.put("recetasCumplidas", recetasCumplidas);
+            respuesta.put("totalRecetasCumplidas", recetasCumplidas.size());
+            respuesta.put("fechaConsulta", java.time.LocalDateTime.now());
+
+            return new CodigoResponse<>(200, "Historial médico obtenido exitosamente", respuesta);
+
+        } catch (Exception e) {
+            log.error("Error al obtener historial completo: {}", e.getMessage(), e);
+            return new CodigoResponse<>(500, "Error interno al obtener historial", null);
+        }
     }
 
     // 🔍 Obtener todos los apiarios

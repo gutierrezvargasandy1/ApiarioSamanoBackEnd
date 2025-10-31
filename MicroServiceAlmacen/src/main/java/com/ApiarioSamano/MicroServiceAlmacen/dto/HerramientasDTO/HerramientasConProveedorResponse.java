@@ -13,5 +13,6 @@ public class HerramientasConProveedorResponse {
     private Long id;
     private String nombre;
     private String foto;
+    private Long idAlmacen;
     private ProveedorResponseDTO proveedor;
 }

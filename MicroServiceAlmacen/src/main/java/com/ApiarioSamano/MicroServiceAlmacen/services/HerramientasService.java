@@ -44,15 +44,50 @@ public class HerramientasService {
             response.setFoto(null);
         }
 
+        // ✅ CORRECCIÓN: Obtener el ID del almacén, no el objeto completo
+        response.setIdAlmacen(h.getAlmacen() != null ? h.getAlmacen().getId() : null);
         response.setIdProveedor(h.getIdProveedor());
+
+        return response;
+    }
+
+    private HerramientasConProveedorResponse mapHerramientaConProveedor(Herramientas h) {
+        HerramientasConProveedorResponse response = new HerramientasConProveedorResponse();
+        response.setId(h.getId());
+        response.setNombre(h.getNombre());
+
+        // Convertir byte[] a Base64 String
+        if (h.getFoto() != null && h.getFoto().length > 0) {
+            String fotoBase64 = Base64.getEncoder().encodeToString(h.getFoto());
+            response.setFoto(fotoBase64);
+        } else {
+            response.setFoto(null);
+        }
+
+        // ✅ CORRECCIÓN: Agregar el ID del almacén
+        response.setIdAlmacen(h.getAlmacen() != null ? h.getAlmacen().getId() : null);
+
+        // Obtener información del proveedor
+        try {
+            List<ProveedorResponseDTO> proveedores = proveedoresClient.obtenerTodosProveedores();
+            proveedores.stream()
+                    .filter(p -> p.getId() != null && p.getId().equals(h.getIdProveedor().longValue()))
+                    .findFirst()
+                    .ifPresent(response::setProveedor);
+        } catch (Exception e) {
+            log.error("⚠️ Error al obtener proveedor para herramienta ID {}: {}", h.getId(), e.getMessage());
+            response.setProveedor(null);
+        }
+
         return response;
     }
 
     // ================== CRUD ==================
     @Transactional
     public CodigoResponse<HerramientasResponse> guardar(HerramientasRequest req) {
-        log.info("🔍 Iniciando proceso de guardar herramienta: {}", req.getNombre());
+        log.info("🔍 Iniciando proceso de guardar/actualizar herramienta: {}", req.getNombre());
 
+        // 🔹 Validar proveedor
         log.info("🔍 Consultando microservicio de proveedores...");
         List<ProveedorResponseDTO> proveedores = proveedoresClient.obtenerTodosProveedores();
         log.info("✅ Proveedores obtenidos: {} registros", proveedores.size());
@@ -66,6 +101,7 @@ public class HerramientasService {
         }
         log.info("✅ Proveedor ID {} validado correctamente", req.getIdProveedor());
 
+        // 🔹 Validar almacén
         log.info("🔍 Buscando almacén con ID: {}", req.getIdAlmacen());
         Almacen almacen = almacenRepository.findById(req.getIdAlmacen().longValue())
                 .orElseThrow(() -> {
@@ -74,26 +110,53 @@ public class HerramientasService {
                 });
         log.info("✅ Almacén encontrado: ID {}, Ubicación: {}", almacen.getId(), almacen.getUbicacion());
 
-        // Verificar capacidad del almacén antes de agregar
-        int espaciosOcupados = calcularEspaciosOcupados(almacen);
-        log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
+        // 🔹 Verificar capacidad del almacén solo si es una creación nueva
+        if (req.getId() == null) {
+            int espaciosOcupados = calcularEspaciosOcupados(almacen);
+            log.info("📊 Capacidad del almacén: {}, Espacios ocupados: {}", almacen.getCapacidad(), espaciosOcupados);
 
-        if (espaciosOcupados >= almacen.getCapacidad()) {
-            log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
-                    almacen.getCapacidad(), espaciosOcupados);
-            return new CodigoResponse<>(400, "No hay capacidad disponible en el almacén", null);
+            if (espaciosOcupados >= almacen.getCapacidad()) {
+                log.error("❌ No hay capacidad disponible en el almacén. Capacidad: {}, Ocupados: {}",
+                        almacen.getCapacidad(), espaciosOcupados);
+                return new CodigoResponse<>(400, "No hay capacidad disponible en el almacén", null);
+            }
         }
 
-        // Crear y guardar la herramienta
-        Herramientas herramienta = new Herramientas();
-        herramienta.setNombre(req.getNombre());
+        Herramientas herramienta;
 
-        // Convertir Base64 String a byte[]
+        // 🟡 Si viene con ID → actualizar
+        if (req.getId() != null) {
+            log.info("🛠️ Actualizando herramienta existente con ID: {}", req.getId());
+            herramienta = herramientasRepository.findById(req.getId().longValue())
+                    .orElseThrow(() -> {
+                        log.error("❌ No se encontró herramienta con ID: {}", req.getId());
+                        return new RuntimeException("Herramienta no encontrada con ID: " + req.getId());
+                    });
+        } else {
+            // 🟢 Si no trae ID → crear nueva
+            log.info("🆕 Creando nueva herramienta");
+            herramienta = new Herramientas();
+        }
+
+        // 🔹 Asignar campos comunes
+        herramienta.setNombre(req.getNombre());
+        herramienta.setIdProveedor(req.getIdProveedor());
+        herramienta.setAlmacen(almacen);
+
+        // 🔹 Procesar imagen en Base64
         if (req.getFoto() != null && !req.getFoto().isEmpty()) {
             try {
-                byte[] fotoBytes = Base64.getDecoder().decode(req.getFoto());
+                String base64Data = req.getFoto();
+
+                // Limpiar el string Base64 - remover el prefijo "data:image/...;base64,"
+                if (base64Data.contains(",")) {
+                    base64Data = base64Data.split(",")[1];
+                    log.info("✅ Prefijo Base64 removido, datos limpios obtenidos");
+                }
+
+                byte[] fotoBytes = Base64.getDecoder().decode(base64Data);
                 herramienta.setFoto(fotoBytes);
-                log.info("✅ Foto convertida de Base64 a byte[], tamaño: {} bytes", fotoBytes.length);
+                log.info("✅ Foto convertida correctamente, tamaño: {} bytes", fotoBytes.length);
             } catch (IllegalArgumentException e) {
                 log.error("❌ Error al decodificar Base64 de la foto: {}", e.getMessage());
                 return new CodigoResponse<>(400, "Formato Base64 de la foto inválido", null);
@@ -103,22 +166,28 @@ public class HerramientasService {
             log.info("ℹ️ No se proporcionó foto para la herramienta");
         }
 
-        herramienta.setAlmacen(almacen);
-        herramienta.setIdProveedor(req.getIdProveedor());
-
+        // 🔹 Guardar herramienta (JPA decide si INSERT o UPDATE)
         log.info("💾 Guardando herramienta en base de datos...");
         Herramientas guardada = herramientasRepository.save(herramienta);
-        log.info("✅ Herramienta guardada exitosamente con ID: {}", guardada.getId());
+        log.info("✅ Herramienta {} exitosamente con ID: {}",
+                req.getId() != null ? "actualizada" : "creada", guardada.getId());
 
-        // Actualizar la lista de herramientas del almacén
-        if (almacen.getHerramientas() == null) {
-            almacen.setHerramientas(new java.util.ArrayList<>());
+        // 🔹 Si fue nueva, agregarla al almacén
+        if (req.getId() == null) {
+            if (almacen.getHerramientas() == null) {
+                almacen.setHerramientas(new java.util.ArrayList<>());
+            }
+            almacen.getHerramientas().add(guardada);
+            almacenRepository.save(almacen);
+            log.info("✅ Herramienta agregada al almacén. Nuevos espacios ocupados: {}",
+                    calcularEspaciosOcupados(almacen));
         }
-        almacen.getHerramientas().add(guardada);
-        almacenRepository.save(almacen);
-        log.info("✅ Herramienta agregada al almacén. Nuevos espacios ocupados: {}", calcularEspaciosOcupados(almacen));
 
-        return new CodigoResponse<>(200, "Herramienta guardada correctamente", mapHerramienta(guardada));
+        // 🔹 Respuesta final
+        return new CodigoResponse<>(
+                200,
+                req.getId() != null ? "Herramienta actualizada correctamente" : "Herramienta guardada correctamente",
+                mapHerramienta(guardada));
     }
 
     // Método auxiliar para calcular espacios ocupados
@@ -204,26 +273,9 @@ public class HerramientasService {
         List<ProveedorResponseDTO> proveedores = proveedoresClient.obtenerTodosProveedores();
         log.info("✅ Se obtuvieron {} proveedores", proveedores.size());
 
-        List<HerramientasConProveedorResponse> resultado = herramientas.stream().map(h -> {
-            HerramientasConProveedorResponse dto = new HerramientasConProveedorResponse();
-            dto.setId(h.getId());
-            dto.setNombre(h.getNombre());
-
-            // Convertir byte[] a Base64 String
-            if (h.getFoto() != null && h.getFoto().length > 0) {
-                String fotoBase64 = Base64.getEncoder().encodeToString(h.getFoto());
-                dto.setFoto(fotoBase64);
-            } else {
-                dto.setFoto(null);
-            }
-
-            proveedores.stream()
-                    .filter(p -> p.getId().equals(h.getIdProveedor().longValue()))
-                    .findFirst()
-                    .ifPresent(dto::setProveedor);
-
-            return dto;
-        }).collect(Collectors.toList());
+        List<HerramientasConProveedorResponse> resultado = herramientas.stream()
+                .map(this::mapHerramientaConProveedor)
+                .collect(Collectors.toList());
 
         log.info("✅ Herramientas con proveedor mapeadas: {} registros", resultado.size());
         return new CodigoResponse<>(200, "Herramientas con proveedor obtenidas", resultado);
@@ -241,29 +293,7 @@ public class HerramientasService {
         Herramientas herramienta = optHerramienta.get();
         log.info("✅ Herramienta encontrada: {}", herramienta.getNombre());
 
-        log.info("🔍 Consultando microservicio de proveedores...");
-        List<ProveedorResponseDTO> proveedores = proveedoresClient.obtenerTodosProveedores();
-
-        HerramientasConProveedorResponse dto = new HerramientasConProveedorResponse();
-        dto.setId(herramienta.getId());
-        dto.setNombre(herramienta.getNombre());
-
-        // Convertir byte[] a Base64 String
-        if (herramienta.getFoto() != null && herramienta.getFoto().length > 0) {
-            String fotoBase64 = Base64.getEncoder().encodeToString(herramienta.getFoto());
-            dto.setFoto(fotoBase64);
-        } else {
-            dto.setFoto(null);
-        }
-
-        proveedores.stream()
-                .filter(p -> p.getId().equals(herramienta.getIdProveedor().longValue()))
-                .findFirst()
-                .ifPresent(proveedor -> {
-                    dto.setProveedor(proveedor);
-                    log.info("✅ Proveedor asociado: {}", proveedor.getNombreEmpresa());
-                });
-
+        HerramientasConProveedorResponse dto = mapHerramientaConProveedor(herramienta);
         return new CodigoResponse<>(200, "Herramienta con proveedor obtenida", dto);
     }
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HerramientasRequest {
+    private Long id;
     private String nombre;
     private String foto;
     private Integer idAlmacen;

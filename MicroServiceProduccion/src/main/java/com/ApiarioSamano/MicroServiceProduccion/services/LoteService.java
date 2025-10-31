@@ -36,6 +36,7 @@ public class LoteService {
 
     private static final Logger log = LoggerFactory.getLogger(LoteService.class);
 
+    // Guardar lote (crear o editar)
     public CodigoResponse<Lote> guardarLote(LoteRequest request) {
         try {
             log.info("Validando existencia del almacén con ID: {}", request.getIdAlmacen());
@@ -47,36 +48,59 @@ public class LoteService {
                 return new CodigoResponse<>(404, "El almacén especificado no existe", null);
             }
 
-            // 🔹 Crear lote temporal con número de seguimiento temporal
-            Lote loteTemporal = new Lote();
-            loteTemporal.setNumeroSeguimiento("TEMP-" + System.currentTimeMillis()); // Temporal
-            loteTemporal.setTipoProducto(request.getTipoProducto());
-            loteTemporal.setFechaCreacion(LocalDate.now());
-            loteTemporal.setIdAlmacen(request.getIdAlmacen());
+            // 🔹 VERIFICAR SI ES EDICIÓN (request tiene ID)
+            if (request.getId() != null && request.getId() > 0) {
+                // 🔹 MODO EDICIÓN - Buscar lote existente
+                Optional<Lote> loteExistenteOpt = loteRepository.findById(request.getId());
+                if (loteExistenteOpt.isPresent()) {
+                    Lote loteExistente = loteExistenteOpt.get();
 
-            // 🔹 Guardar para obtener ID
-            Lote loteGuardado = loteRepository.save(loteTemporal);
-            log.info("Lote temporal guardado con ID: {}", loteGuardado.getId());
+                    // 🔹 Actualizar datos del lote existente
+                    loteExistente.setTipoProducto(request.getTipoProducto());
+                    loteExistente.setIdAlmacen(request.getIdAlmacen());
 
-            // 🔹 Generar código real con el ID
-            LoteRequestClient infLote = new LoteRequestClient();
-            infLote.setProducto(request.getTipoProducto());
-            infLote.setNumeroLote(loteGuardado.getId().intValue());
+                    // 🔹 Guardar cambios
+                    Lote loteActualizado = loteRepository.save(loteExistente);
+                    log.info("Lote actualizado con ID: {}", loteActualizado.getId());
 
-            String codigoSeguimientoReal = codigoClientMicroservice.generarLote(infLote);
+                    return new CodigoResponse<>(200, "Lote actualizado correctamente", loteActualizado);
+                } else {
+                    log.warn("Lote con ID {} no encontrado para edición", request.getId());
+                    return new CodigoResponse<>(404, "Lote no encontrado", null);
+                }
+            } else {
+                // 🔹 MODO CREACIÓN - Crear nuevo lote
+                // Crear lote temporal con número de seguimiento temporal
+                Lote loteTemporal = new Lote();
+                loteTemporal.setNumeroSeguimiento("TEMP-" + System.currentTimeMillis()); // Temporal
+                loteTemporal.setTipoProducto(request.getTipoProducto());
+                loteTemporal.setFechaCreacion(LocalDate.now());
+                loteTemporal.setIdAlmacen(request.getIdAlmacen());
 
-            if (codigoSeguimientoReal == null || codigoSeguimientoReal.trim().isEmpty()) {
-                // Si falla, mantener el temporal
-                log.warn("No se pudo generar código real, manteniendo temporal");
-                return new CodigoResponse<>(200, "Lote guardado con código temporal", loteGuardado);
+                // 🔹 Guardar para obtener ID
+                Lote loteGuardado = loteRepository.save(loteTemporal);
+                log.info("Lote temporal guardado con ID: {}", loteGuardado.getId());
+
+                // 🔹 Generar código real con el ID
+                LoteRequestClient infLote = new LoteRequestClient();
+                infLote.setProducto(request.getTipoProducto());
+                infLote.setNumeroLote(loteGuardado.getId().intValue());
+
+                String codigoSeguimientoReal = codigoClientMicroservice.generarLote(infLote);
+
+                if (codigoSeguimientoReal == null || codigoSeguimientoReal.trim().isEmpty()) {
+                    // Si falla, mantener el temporal
+                    log.warn("No se pudo generar código real, manteniendo temporal");
+                    return new CodigoResponse<>(200, "Lote guardado con código temporal", loteGuardado);
+                }
+
+                // 🔹 Actualizar con código real
+                loteGuardado.setNumeroSeguimiento(codigoSeguimientoReal);
+                Lote loteFinal = loteRepository.save(loteGuardado);
+
+                log.info("Lote actualizado con código real: {}", loteFinal.getNumeroSeguimiento());
+                return new CodigoResponse<>(200, "Lote guardado correctamente", loteFinal);
             }
-
-            // 🔹 Actualizar con código real
-            loteGuardado.setNumeroSeguimiento(codigoSeguimientoReal);
-            Lote loteFinal = loteRepository.save(loteGuardado);
-
-            log.info("Lote actualizado con código real: {}", loteFinal.getNumeroSeguimiento());
-            return new CodigoResponse<>(200, "Lote guardado correctamente", loteFinal);
 
         } catch (Exception e) {
             log.error("Error al guardar el lote: {}", e.getMessage(), e);

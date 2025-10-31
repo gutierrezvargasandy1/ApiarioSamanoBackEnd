@@ -37,6 +37,13 @@ public class AIAnalysisController {
         return aiDataAnalysisService.obtenerSugerenciasPorApiario(idApiario);
     }
 
+    // 💬 CONSULTA PERSONALIZADA SOBRE PRODUCCIÓN
+    @PostMapping("/consulta")
+    public CodigoResponse<Map<String, Object>> consultaPersonalizada(@RequestBody Map<String, String> request) {
+        String pregunta = request.get("pregunta");
+        return aiDataAnalysisService.consultaPersonalizada(pregunta);
+    }
+
     @GetMapping("/salud")
     public CodigoResponse<Map<String, Object>> verificarSaludOllama() {
         boolean ollamaRunning = ollamaService.isOllamaRunning();

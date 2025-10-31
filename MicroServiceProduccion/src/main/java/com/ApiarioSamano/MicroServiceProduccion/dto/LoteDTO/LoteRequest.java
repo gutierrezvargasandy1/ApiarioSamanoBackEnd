@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoteRequest {
+    private Long id;
     private Long idAlmacen;
     private String tipoProducto;
 }

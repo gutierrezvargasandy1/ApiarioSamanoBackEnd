@@ -205,6 +205,194 @@ public class AIDataAnalysisService {
         }
     }
 
+    public CodigoResponse<Map<String, Object>> consultaPersonalizada(String pregunta) {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            log.info("💬 Procesando consulta personalizada: {}", pregunta);
+
+            if (pregunta == null || pregunta.trim().isEmpty()) {
+                return new CodigoResponse<>(400, "La pregunta no puede estar vacía", null);
+            }
+
+            // Obtener datos contextuales para enriquecer la respuesta
+            String contextoApiarios = obtenerContextoApiarios();
+
+            // Preparar prompt con contexto
+            String promptCompleto = String.format(
+                    "Contexto actual del sistema apícola:\n%s\n\nPregunta del usuario: %s",
+                    contextoApiarios, pregunta);
+
+            String systemPrompt = """
+                    Eres un experto apícola especializado en manejo de colmenas, salud de abejas, producción de miel y gestión de apiarios.
+                    Responde de manera técnica pero clara en español.
+                    Sé conciso (máximo 150 palabras) pero informativo.
+                    Si la pregunta requiere datos específicos que no tienes, sugiere consultar los reportes detallados.
+                    Proporciona recomendaciones prácticas basadas en mejores prácticas apícolas.
+                    """;
+
+            String respuestaIA = ollamaService.generateAnalysis(systemPrompt, promptCompleto, 150);
+
+            Map<String, Object> resultado = new HashMap<>();
+            resultado.put("consulta", pregunta);
+            resultado.put("respuesta", respuestaIA);
+            resultado.put("contextoUtilizado", !contextoApiarios.contains("No hay datos"));
+            resultado.put("modeloUsado", ollamaService.getModel());
+            resultado.put("tiempoProcesamiento", (System.currentTimeMillis() - startTime) + "ms");
+
+            log.info("✅ Consulta procesada exitosamente");
+            return new CodigoResponse<>(200, "Consulta procesada exitosamente", resultado);
+
+        } catch (Exception e) {
+            log.error("💥 Error en consulta personalizada: {}", e.getMessage());
+            return new CodigoResponse<>(500, "Error procesando consulta: " + e.getMessage(), null);
+        }
+    }
+
+    private String obtenerContextoApiarios() {
+        try {
+            CodigoResponse<List<Apiarios>> apiariosResponse = apiariosService.obtenerTodos();
+            List<Apiarios> apiarios = apiariosResponse.getData();
+
+            if (apiarios == null || apiarios.isEmpty()) {
+                return "No hay datos de apiarios registrados en el sistema.";
+            }
+
+            StringBuilder contexto = new StringBuilder();
+            contexto.append("RESUMEN DEL SISTEMA APIARIO:\n");
+            contexto.append("• Total de apiarios: ").append(apiarios.size()).append("\n");
+
+            long conTratamiento = apiarios.stream().filter(a -> a.getReceta() != null).count();
+            contexto.append("• Apiarios con tratamiento: ").append(conTratamiento).append("\n");
+            contexto.append("• Apiarios sin tratamiento: ").append(apiarios.size() - conTratamiento).append("\n");
+
+            // Distribución de salud
+            Map<String, Long> distribucionSalud = apiarios.stream()
+                    .collect(Collectors.groupingBy(
+                            a -> a.getSalud() != null ? a.getSalud() : "No especificada",
+                            Collectors.counting()));
+
+            contexto.append("• Distribución de salud: ").append(distribucionSalud).append("\n");
+
+            return contexto.toString();
+
+        } catch (Exception e) {
+            log.warn("⚠️ No se pudo obtener contexto de apiarios: {}", e.getMessage());
+            return "No se pudieron cargar los datos actuales de apiarios.";
+        }
+    }
+
+    private String obtenerContextoSalud() {
+        try {
+            CodigoResponse<List<Apiarios>> apiariosResponse = apiariosService.obtenerTodos();
+            List<Apiarios> apiarios = apiariosResponse.getData();
+
+            if (apiarios == null || apiarios.isEmpty()) {
+                return "No hay datos de apiarios para análisis de salud.";
+            }
+
+            StringBuilder contexto = new StringBuilder();
+            contexto.append("ANÁLISIS DE SALUD APIARIA:\n");
+
+            Map<String, Long> saludStats = apiarios.stream()
+                    .collect(Collectors.groupingBy(
+                            a -> a.getSalud() != null ? a.getSalud() : "No especificada",
+                            Collectors.counting()));
+
+            saludStats.forEach((salud, count) -> {
+                contexto.append("• ").append(salud).append(": ").append(count).append(" apiarios\n");
+            });
+
+            long conHistorial = apiarios.stream()
+                    .filter(a -> a.getHistorialMedico() != null)
+                    .count();
+            contexto.append("• Apiarios con historial médico: ").append(conHistorial).append("/")
+                    .append(apiarios.size()).append("\n");
+
+            return contexto.toString();
+
+        } catch (Exception e) {
+            return "No se pudieron cargar los datos de salud.";
+        }
+    }
+
+    private String obtenerContextoProduccion() {
+        try {
+            // Aquí puedes integrar con el servicio de producción si está disponible
+            return "Datos de producción: Consulta el módulo de producción para información detallada sobre cosechas y rendimiento.";
+        } catch (Exception e) {
+            return "Información de producción no disponible actualmente.";
+        }
+    }
+
+    private String obtenerContextoClima() {
+        try {
+            double temperatura = temperaturaApia.obtenerTemperaturaActualDolores();
+            return String.format(
+                    "CONDICIONES CLIMÁTICAS ACTUALES:\n• Temperatura en Dolores Hidalgo: %.1f°C\n• Ubicación: Dolores Hidalgo, Guanajuato, México",
+                    temperatura);
+        } catch (Exception e) {
+            return "Datos climáticos no disponibles actualmente.";
+        }
+    }
+
+    private String obtenerContextoTratamientos() {
+        try {
+            CodigoResponse<List<Apiarios>> apiariosResponse = apiariosService.obtenerTodos();
+            List<Apiarios> apiarios = apiariosResponse.getData();
+
+            if (apiarios == null || apiarios.isEmpty()) {
+                return "No hay datos de tratamientos.";
+            }
+
+            long conTratamiento = apiarios.stream()
+                    .filter(a -> a.getReceta() != null)
+                    .count();
+
+            StringBuilder contexto = new StringBuilder();
+            contexto.append("ESTADO DE TRATAMIENTOS:\n");
+            contexto.append("• Apiarios con tratamiento activo: ").append(conTratamiento).append("\n");
+            contexto.append("• Apiarios sin tratamiento: ").append(apiarios.size() - conTratamiento).append("\n");
+            contexto.append("• Porcentaje en tratamiento: ")
+                    .append(String.format("%.1f%%", (conTratamiento * 100.0) / apiarios.size())).append("\n");
+
+            return contexto.toString();
+
+        } catch (Exception e) {
+            return "No se pudieron cargar los datos de tratamientos.";
+        }
+    }
+
+    private String obtenerDescripcionContexto(String tipoContexto) {
+        switch (tipoContexto.toLowerCase()) {
+            case "salud":
+                return "de Salud Apiaria";
+            case "produccion":
+                return "de Producción";
+            case "clima":
+                return "Climático";
+            case "tratamientos":
+                return "de Tratamientos Médicos";
+            default:
+                return "General del Sistema Apiario";
+        }
+    }
+
+    private String obtenerEspecializacionContexto(String tipoContexto) {
+        switch (tipoContexto.toLowerCase()) {
+            case "salud":
+                return "salud y enfermedades de las abejas";
+            case "produccion":
+                return "producción de miel y optimización de cosechas";
+            case "clima":
+                return "impacto climático en la apicultura";
+            case "tratamientos":
+                return "tratamientos médicos y manejo sanitario de colmenas";
+            default:
+                return "gestión integral de apiarios";
+        }
+    }
+
     /**
      * Método seguro para obtener historial médico sin errores de casteo
      */
